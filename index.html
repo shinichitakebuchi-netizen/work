@@ -407,12 +407,12 @@ function sample(){
       {id:uid(),month:mAdd(5),title:'新生活商戦の準備',done:false},
       {id:uid(),month:mAdd(6),title:'新人受け入れ・研修計画',done:false}
     ],
-    settings:{apiKey:'',model:'gemini-2.5-flash'}
+    settings:{apiKey:'',model:'gemini-3.8-flash'}
   };
 }
 function blank(settings){
   return {sample:false,launcher:(S&&S.launcher)||defaultLaunch(),items:arkTasks(),deals:[],results:{month:THIS_MONTH,history:[],products:[]},
-    members:[],shifts:{},minStaff:3,ads:defaultAds(),yearplan:[],settings:settings||{apiKey:'',model:'gemini-2.5-flash'}};
+    members:[],shifts:{},minStaff:3,ads:defaultAds(),yearplan:[],settings:settings||{apiKey:'',model:'gemini-3.8-flash'}};
 }
 function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.items)return o}}catch(e){}return sample()}
 let S=load();
@@ -428,6 +428,7 @@ function defaultLaunch(){return [
   {id:uid(),name:'Instagram',url:'https://www.instagram.com/',color:'var(--me)'}
 ]}
 if(!S.launcher){S.launcher=defaultLaunch()}
+if(!S.settings.model||S.settings.model==='gemini-2.5-flash')S.settings.model='gemini-3.8-flash';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 const MQ=window.matchMedia('(min-width:860px)');
@@ -735,7 +736,7 @@ const PROMPTS={
 };
 function mdLite(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>')}
 async function callGemini(){
-  const m=(S.settings.model||'gemini-2.5-flash').trim();
+  const m=(S.settings.model||'gemini-3.8-flash').trim();
   const contents=ui.chat.filter(x=>x.src!=='エラー').slice(-20).map(x=>({role:x.role,parts:[{text:x.send||x.text}]}));
   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`,{
     method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.settings.apiKey},
@@ -890,7 +891,7 @@ const ACT={
   editYear:el=>yearSheet(byId(S.yearplan,el.dataset.id)),
   yToggle:el=>{const y=byId(S.yearplan,el.dataset.id);if(y){y.done=!y.done;commit()}},
   ai:el=>runAI(el.dataset.q),
-  saveKey:()=>{S.settings.apiKey=document.getElementById('s_key').value.trim();S.settings.model=document.getElementById('s_model').value.trim()||'gemini-2.5-flash';commit('保存した')},
+  saveKey:()=>{S.settings.apiKey=document.getElementById('s_key').value.trim();S.settings.model=document.getElementById('s_model').value.trim()||'gemini-3.8-flash';commit('保存した')},
   saveMin:()=>{S.minStaff=Math.max(0,Number(document.getElementById('s_min').value)||0);commit('保存した')},
   export:()=>{try{const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`work-backup-${TODAY}.json`;document.body.appendChild(a);a.click();a.remove();toast('書き出した')}catch(e){toast('書き出せなかった。コピーを使ってね')}},
   copyJson:()=>{const s=JSON.stringify(S);if(navigator.clipboard)navigator.clipboard.writeText(s).then(()=>toast('コピーした'),()=>toast('コピーできなかった'));else toast('コピーできなかった')},
