@@ -306,6 +306,10 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .frow3 small{font-weight:600;color:var(--faint)}
 .bmeal{grid-template-columns:72px minmax(0,1fr) 80px!important}
 .bmeal input[type=number]{width:100%;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.mhead b{color:var(--nk);font-family:var(--num)}
+.btn.aik{background:linear-gradient(135deg,var(--accent),var(--genba));color:#fff}
+.btn.aik:disabled{opacity:.6}
 .bsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .bsum .lab{font-size:12px;font-weight:700;color:var(--muted)}
 .bsum .big{font-size:28px}.bsum .big small{font-size:13px;color:var(--muted);margin-left:2px}
@@ -1358,7 +1362,7 @@ function bMenuView(){
       :`<button class="lib ${used.has(x.name)?'used':''}" data-act="bAddEx" data-k="${esc(x.name)}">${used.has(x.name)?'✓ ':'＋ '}${esc(x.name)}</button>`).join('')||'<span class="small muted">この部位の種目はまだないよ</span>'}</div>
     <div class="ai-input"><input id="bl_new" placeholder="${esc(part)}の種目を新しく登録" style="flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:16px"><button class="btn sm sub" data-act="bLibAdd">登録</button><button class="btn sm ${ui.bm.libEdit?'':'sub'}" data-act="bLibEdit">${ui.bm.libEdit?'完了':'種目を整理'}</button></div>
     <div class="small muted">強度の目安：1〜5回＝高強度（筋力）、6〜12回＝中強度（筋肥大）、13回以上＝低強度（持久力）。総ボリューム＝セット×回数×重量。</div></div>
-  <div class="card setrow"><div class="card-h"><h2>食事${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2><span class="small muted" id="bmk">${mealTotal?`合計 ${fmtN(mealTotal)}kcal`:''}</span></div>
+  <div class="card setrow"><div class="card-h"><h2>食事${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2><div style="display:flex;gap:10px;align-items:center"><span class="small muted" id="bmk">${mealTotal?`合計 ${fmtN(mealTotal)}kcal`:''}</span><button class="btn sm aik" data-act="bKcalPlan">✦ AIでカロリー計算</button></div></div>
     ${BMEALS.map(([k,l])=>`<div class="mrow"><label class="f"><span>${l}</span><input id="bm_${k}" value="${esc(P.m[k]||'')}" data-change="bMeal" data-k="${k}" placeholder="例：${k==='b'?'オートミール＋プロテイン':k==='l'?'鶏むね定食':k==='d'?'魚・野菜・ご飯少なめ':'ナッツ'}"></label>
       <label class="f"><span>kcal</span><input id="bm_${k}k" type="number" inputmode="numeric" value="${esc(P.m[k+'k']||'')}" data-change="bMeal" data-k="${k}k"></label></div>`).join('')}
     <div class="small muted">入力すると自動で保存される。</div></div>
@@ -1379,14 +1383,14 @@ function bDaySheet(d){
     <label class="f"><span>筋量（kg）${iw||ifat?'<br><small>&nbsp;</small>':''}</span><input id="bd_mm" type="number" step="0.1" inputmode="decimal" value="${esc(lg.mm||'')}"></label></div>
     <div class="f"><span>トレーニング${B().over[d]?'（この日だけ変更済み）':''}　<small>${esc(bDaySummary(P.t))}</small></span>
       ${P.t.length?P.t.map(x=>{const z=bZone(x.reps);return `<label class="bchk"><input type="checkbox" id="bd_t_${x.id}" ${lg.td&&lg.td[x.id]?'checked':''}><span>${esc(bItemText(x))}</span>${z?`<span class="pill" style="--c:${z[1]}">${z[0]}</span>`:''}</label>`}).join(''):'<div class="small muted">休養日</div>'}</div>
-    <div class="f"><span>食事${tk?`（目標 ${fmtN(tk)}kcal）`:''}</span>
+    <div class="f"><div class="mhead"><span>食事${tk?`（目標 ${fmtN(tk)}kcal）`:''}　<b id="bd_total"></b></span><button type="button" class="btn sm aik" data-act="bKcalDay">✦ AIでカロリー計算</button></div>
       ${BMEALS.map(([k,l])=>`<div class="bmeal"><label class="bchk"><input type="checkbox" id="bd_m_${k}" ${lg.md&&lg.md[k]?'checked':''}><span>${l}</span></label><input id="bd_a_${k}" value="${esc((lg.ma||{})[k]||'')}" placeholder="${esc(P.m[k]||'実際に食べたもの')}"><input id="bd_k_${k}" type="number" inputmode="numeric" value="${esc((lg.mk||{})[k]||'')}" placeholder="${esc(P.m[k+'k']||'kcal')}"></div>`).join('')}
-      <div class="small muted">チェック＝予定どおり食べた（予定のkcalで計算）。違うものを食べたら、内容とkcalを書く。</div></div>
+      <div class="small muted">チェック＝予定どおり食べた（予定のkcalで計算）。違うものを食べたら内容を書いて「AIでカロリー計算」を押すと、kcalが自動で入る（AIの推定なので目安）。</div></div>
     <label class="f"><span>メモ</span><textarea id="bd_memo" style="min-height:60px">${esc(lg.memo||'')}</textarea></label>
     <div class="sheet-actions"><button type="button" class="btn sub" data-act="bOverEdit" data-d="${d}">この日のメニューを変更</button><div class="r"><button type="button" class="btn sub" data-act="sheetClose">キャンセル</button><button type="submit" class="btn">保存</button></div></div>
   </form>`;
   sheetCb={fields:[],onSave:()=>{},onDelete:null,bday:d};
-  document.getElementById('sheetWrap').hidden=false;
+  document.getElementById('sheetWrap').hidden=false;bDayTotal();
 }
 function bSaveDay(d){
   const P=bPlan(d),v=id=>(document.getElementById(id)?.value||'').trim(),c=id=>!!document.getElementById(id)?.checked;
@@ -1422,13 +1426,54 @@ const PROMPTS={
   miss:'データを見て抜け漏れを指摘して（期限切れ、次回アクション未設定の案件、出勤人数が足りない日、更新日が過ぎた求人など）。'
 };
 function mdLite(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>')}
-async function geminiOnce(m,contents){
+async function geminiOnce(m,contents,opt){opt=opt||{};
   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`,{
     method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.settings.apiKey},
-    body:JSON.stringify({systemInstruction:{parts:[{text:SYS+'\n\n--- 現在のデータ ---\n'+contextText()}]},contents})});
+    body:JSON.stringify({systemInstruction:{parts:[{text:opt.sys||(SYS+'\n\n--- 現在のデータ ---\n'+contextText())}]},contents,...(opt.json?{generationConfig:{responseMimeType:'application/json'}}:{})})});
   let j={};try{j=await res.json()}catch(e){}
   if(!res.ok){const e=new Error(j.error?.message||('HTTP '+res.status));e.status=res.status;e.busy=res.status===503||res.status===429||/high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED/i.test(e.message);throw e}
   return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('')||'（回答が空だった）';
+}
+/* AIに1回だけ質問する（カロリー計算など）。混雑時はやり直し・予備モデルあり */
+async function geminiAsk(prompt,opt){
+  if(!S.settings.apiKey)throw new Error('AIのキーが未設定。設定 →「AI連携」でGeminiのAPIキーを入れてね');
+  const main=(S.settings.model||'gemini-3.8-flash').trim(),alt=(S.settings.model2||'').trim();
+  const plan=[[main,0],[main,2000],[main,5000]];if(alt&&alt!==main)plan.push([alt,0]);
+  let last;for(const [m,wait] of plan){if(wait)await new Promise(r=>setTimeout(r,wait));
+    try{return await geminiOnce(m,[{role:'user',parts:[{text:prompt}]}],opt)}catch(e){last=e;if(!e.busy)break}}
+  if(last&&last.busy)throw new Error('Geminiが混雑中。少し待ってもう一度押してね');throw last;
+}
+const KCAL_SYS='あなたは日本の栄養計算の補助。食事の内容から、日本食品標準成分表や一般的な市販品の値を参考に、カロリー（kcal）を推定する。量の指定がない食品は一般的な1人前で計算する。必ずJSONだけを返す。';
+async function aiKcal(meals){
+  const list=meals.map(([k,l,t])=>`${k}: ${l}「${t}」`).join('\n');
+  const txt=await geminiAsk(`次の食事それぞれのカロリーを推定して。キーは各行の先頭の英字。\n${list}\n\n返す形式：{"b":数値,"l":数値,"d":数値,"s":数値}（ある食事だけでOK、数値はkcalの整数）`,{sys:KCAL_SYS,json:true});
+  let o;try{o=JSON.parse(txt.replace(/^```json|```$/g,'').trim())}catch(e){const m=txt.match(/\{[\s\S]*\}/);o=m?JSON.parse(m[0]):null}
+  if(!o)throw new Error('AIの答えを読み取れなかった。もう一度押してね');
+  const r={};meals.forEach(([k])=>{const v=Math.round(+o[k]);if(v>0&&v<5000)r[k]=v});return r;
+}
+async function bKcalDay(btn){
+  const P=bPlan(sheetCb&&sheetCb.bday||TODAY),v=id=>(document.getElementById(id)?.value||'').trim(),c=id=>!!document.getElementById(id)?.checked;
+  const meals=BMEALS.map(([k,l])=>[k,l,v('bd_a_'+k)||(c('bd_m_'+k)?(P.m[k]||''):'')]).filter(x=>x[2]);
+  if(!meals.length){toast('食べたものを書くか、チェックを入れてね');return}
+  const o=btn.textContent;btn.disabled=true;btn.textContent='計算中…';
+  try{const r=await aiKcal(meals);let n=0;Object.entries(r).forEach(([k,kc])=>{const el=document.getElementById('bd_k_'+k);if(el){el.value=kc;n++}});
+    bDayTotal();toast(n?`${n}食分のカロリーを入れた（AIの推定なので目安）`:'計算できなかった')}
+  catch(e){toast(e.message)}
+  btn.disabled=false;btn.textContent=o;
+}
+function bDayTotal(){
+  const P=bPlan(sheetCb&&sheetCb.bday||TODAY);let s=0;
+  BMEALS.forEach(([k])=>{const a=+(document.getElementById('bd_k_'+k)?.value||0);if(a)s+=a;else if(document.getElementById('bd_m_'+k)?.checked)s+=+P.m[k+'k']||0});
+  const el=document.getElementById('bd_total');if(el)el.textContent=s?`合計 ${fmtN(s)}kcal`:'';
+}
+async function bKcalPlan(btn){
+  const P=bEditTarget();const meals=BMEALS.map(([k,l])=>[k,l,(P.m[k]||'').trim()]).filter(x=>x[2]);
+  if(!meals.length){toast('先に食事の内容を書いてね');return}
+  const o=btn.textContent;btn.disabled=true;btn.textContent='計算中…';
+  try{const r=await aiKcal(meals);Object.entries(r).forEach(([k,kc])=>{P.m[k+'k']=String(kc);const el=document.getElementById('bm_'+k+'k');if(el)el.value=kc});
+    save();const t=bPlanKcal(P);const el=document.getElementById('bmk');if(el)el.textContent=t?`合計 ${fmtN(t)}kcal`:'';toast('カロリーを入れた（AIの推定なので目安）')}
+  catch(e){toast(e.message)}
+  btn.disabled=false;btn.textContent=o;
 }
 /* 混雑（503など）のときは少し待って自動でやり直し。それでもダメなら予備モデルに切り替える */
 async function callGemini(){
@@ -1630,6 +1675,8 @@ const ACT={
     if(B().lib.some(x=>x.name===v)){toast('同じ名前の種目があるよ');return}B().lib.push({name:v,part:ui.bm.part});commit('種目を登録した')},
   bLibEdit:()=>{ui.bm.libEdit=!ui.bm.libEdit;render()},
   bLibDel:el=>{B().lib=B().lib.filter(x=>x.name!==el.dataset.k);commit('種目リストから消した（メニューに入っている分はそのまま）')},
+  bKcalDay:el=>bKcalDay(el),
+  bKcalPlan:el=>bKcalPlan(el),
   bCopy:el=>{bCopyTo([+el.dataset.k]);commit(WD[+el.dataset.k]+'曜日に'+bCpyLabel()+'をコピーした')},
   bCopyAll:()=>{bCopyTo([0,1,2,3,4,5,6].filter(w=>w!==ui.bm.mwd));commit('ほかの全曜日に'+bCpyLabel()+'をコピーした')},
   bCpyMode:el=>{ui.bm.cpy=el.dataset.k;render()},
@@ -1699,6 +1746,7 @@ document.addEventListener('click',e=>{
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
 document.addEventListener('change',e=>{
+  if(e.target.id&&e.target.id.startsWith('bd_m_'))bDayTotal();
   if(e.target.dataset&&e.target.dataset.change==='bMeal'){const P=bEditTarget();P.m[e.target.dataset.k]=e.target.value;save();const t=bPlanKcal(P);const el=document.getElementById('bmk');if(el)el.textContent=t?`合計 ${fmtN(t)}kcal`:'';return}
   if(e.target.dataset&&e.target.dataset.change==='bItem'){const P=bEditTarget();const x=P.t.find(y=>y.id===e.target.dataset.id);if(!x)return;x[e.target.dataset.f]=e.target.value;save();
     const v=document.getElementById('bvol');if(v)v.textContent=bDaySummary(P.t);const z=bZone(x.reps),pz=document.getElementById('bz_'+x.id);if(pz){pz.hidden=!z;if(z){pz.textContent=z[0];pz.style.setProperty('--c',z[1])}}return}
@@ -1710,7 +1758,7 @@ document.addEventListener('change',e=>{
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
   if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.conn.kintai)S.conn.kintai={url:'',token:''};if(!S.launcher)S.launcher=defaultLaunch();if(!S.body)S.body=bodyDef();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
-document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value;if(e.target.id==='st_new')ui.st.newStore=e.target.value});
+document.addEventListener('input',e=>{if(e.target.id&&e.target.id.startsWith('bd_k_'))bDayTotal();if(e.target.id==='aiq')ui.aiDraft=e.target.value;if(e.target.id==='st_new')ui.st.newStore=e.target.value});
 document.addEventListener('keydown',e=>{
   if(e.target.id!=='aiq'||e.key!=='Enter'||e.shiftKey)return;
   if(e.isComposing||e.keyCode===229)return;
