@@ -383,7 +383,11 @@ main.fit{padding-bottom:12px}
 .f input,.f select,.f textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:16px}
 .f textarea{min-height:90px;resize:vertical}
 .f .hint{font-size:12px;color:var(--muted)}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.frow>*,.frow3>*{min-width:0}
+/* iPadのSafariは日付・時刻欄に固有の幅と中央寄せを付けるので打ち消す */
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;display:block;min-height:44px;text-align:left}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
 .sheet-actions{display:flex;gap:8px;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
 .sheet-actions .r{display:flex;gap:8px;margin-left:auto}
 
