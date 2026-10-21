@@ -528,7 +528,7 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',bm:{tab:'cal',month:THIS_MONTH,mwd:1,odate:'',metric:'w'},ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},al:{data:null,edit:null,busy:false,err:'',at:0},td:{data:null,busy:false,err:'',at:0}};
+let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',bm:{cpy:'t',tab:'cal',month:THIS_MONTH,mwd:1,odate:'',metric:'w'},ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},al:{data:null,edit:null,busy:false,err:'',at:0},td:{data:null,busy:false,err:'',at:0}};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
@@ -1240,8 +1240,14 @@ function bMenuView(){
     ${BMEALS.map(([k,l])=>`<label class="f"><span>${l}</span><input id="bm_${k}" value="${esc(P.m[k]||'')}" data-change="bMeal" data-k="${k}" placeholder="例：${k==='b'?'オートミール＋プロテイン':k==='l'?'鶏むね定食':k==='d'?'魚・野菜・ご飯少なめ':'ナッツ'}"></label>`).join('')}
     <label class="f"><span>目安カロリー（kcal・任意）</span><input id="bm_kcal" type="number" inputmode="numeric" value="${esc(P.m.kcal||'')}" data-change="bMeal" data-k="kcal"></label>
     <div class="small muted">入力すると自動で保存される。</div></div>
-  ${od?'':`<div class="card setrow"><h2>${WD[ui.bm.mwd]}曜日のメニューをコピー</h2><div class="chips">${days.filter(w=>w!==ui.bm.mwd).map(w=>`<button class="chip" data-act="bCopy" data-k="${w}">${WD[w]}曜日へ</button>`).join('')}</div><div class="small muted">コピー先のトレーニングと食事は上書きされる。</div></div>`}`;
+  ${od?'':`<div class="card setrow"><h2>${WD[ui.bm.mwd]}曜日のメニューをコピー</h2>
+    <div class="seg" role="tablist">${[['t','トレーニングだけ'],['m','食事だけ'],['all','両方']].map(([k,l])=>`<button class="${ui.bm.cpy===k?'on':''}" data-act="bCpyMode" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="chips">${days.filter(w=>w!==ui.bm.mwd).map(w=>`<button class="chip" data-act="bCopy" data-k="${w}">${WD[w]}曜日へ</button>`).join('')}<button class="chip" data-act="bCopyAll">ほかの全曜日へ</button></div>
+    <div class="small muted">コピー先の${ui.bm.cpy==='t'?'トレーニング':ui.bm.cpy==='m'?'食事':'トレーニングと食事'}は上書きされる。</div></div>`}`;
 }
+function bCpyLabel(){return ui.bm.cpy==='t'?'トレーニング':ui.bm.cpy==='m'?'食事':'メニュー'}
+function bCopyTo(ws){const src=B().plan[ui.bm.mwd],mode=ui.bm.cpy;
+  ws.forEach(w=>{const P=B().plan[w];if(mode!=='m')P.t=src.t.map(x=>({...x,id:uid()}));if(mode!=='t')P.m={...src.m}})}
 function bDaySheet(d){
   const P=bPlan(d),lg=B().logs[d]||{},iw=bIdeal(d,'w'),ifat=bIdeal(d,'f');
   document.getElementById('sheet').innerHTML=`<h3>${fmtD(d)}${d===TODAY?' 今日':''}</h3>
@@ -1479,7 +1485,9 @@ const ACT={
     if(!it.name){toast('種目を入れてね');return}if(kind==='c'&&!+it.min){toast('時間（分）を入れてね');return}
     bEditTarget().t.push(it);if(kind==='s'&&!B().lib.some(x=>x.name===it.name))B().lib.push({name:it.name,part:it.part});commit('追加した')},
   bItemDel:el=>{const P=bEditTarget();P.t=P.t.filter(x=>x.id!==el.dataset.id);commit()},
-  bCopy:el=>{const src=B().plan[ui.bm.mwd];B().plan[+el.dataset.k]={t:src.t.map(x=>({...x,id:uid()})),m:{...src.m}};commit(WD[+el.dataset.k]+'曜日にコピーした')},
+  bCopy:el=>{bCopyTo([+el.dataset.k]);commit(WD[+el.dataset.k]+'曜日に'+bCpyLabel()+'をコピーした')},
+  bCopyAll:()=>{bCopyTo([0,1,2,3,4,5,6].filter(w=>w!==ui.bm.mwd));commit('ほかの全曜日に'+bCpyLabel()+'をコピーした')},
+  bCpyMode:el=>{ui.bm.cpy=el.dataset.k;render()},
   bOverEdit:el=>{const d=el.dataset.d;closeSheet();ui.view='body';ui.seg.body='menu';ui.bm.odate=d;render();window.scrollTo(0,0)},
   bOverEnd:()=>{ui.bm.odate='';render()},
   bOverDel:()=>{delete B().over[ui.bm.odate];ui.bm.odate='';commit('固定メニューに戻した')},
