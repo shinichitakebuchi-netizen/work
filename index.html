@@ -272,6 +272,14 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .grid tbody tr:first-child td{font-weight:700;background:color-mix(in srgb,var(--genba) 8%,transparent)}
 .grid td{cursor:pointer}.grid td:hover{background:var(--seg)}
 .grid td.fx{color:var(--muted);font-style:italic;cursor:default}
+.grid.ks td.kc{text-align:center;min-width:56px;font-weight:700;color:var(--muted)}
+.grid.ks td.kc.off{background:color-mix(in srgb,var(--nk) 18%,transparent);color:var(--nk)}
+.grid.ks td.kc.chg{outline:2px solid var(--accent);outline-offset:-2px}
+.grid.ks tbody tr:first-child td{font-weight:700;background:none}
+.grid.ks tbody tr:first-child td.kc.off{background:color-mix(in srgb,var(--nk) 18%,transparent)}
+.grid.ks tbody th.sun{color:var(--danger)}.grid.ks tbody th.sat{color:var(--genba)}
+.grid.ks tr.today th,.grid.ks tr.today td{box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
+.grid.ks td.cnt{text-align:center;font-weight:800}
 .embed{padding:0;overflow:hidden}
 .embed iframe{display:block;width:100%;height:60vh;min-height:300px;border:0;background:#fff}
 html,body{overscroll-behavior:none}
@@ -465,6 +473,7 @@ if(!S.launcher){S.launcher=defaultLaunch()}
 S.launcher.forEach(a=>{if(a.url==='https://mail.google.com/')a.url='googlegmail://'});
 if(!S.names)S.names={app:'WORK'};
 if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};
+if(!S.conn.kintai)S.conn.kintai={url:'',token:''};
 if(!S.embeds)S.embeds=[];
 if(!S.gcal)S.gcal={at:0,events:[]};
 function appName(){return (S.names&&S.names.app)||'WORK'}
@@ -478,7 +487,7 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:''};
+let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0}};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
@@ -625,7 +634,9 @@ function vGenba(){
 /* ===== NK ===== */
 function vNk(){
   const s=ui.seg.nk;let body='';
-  if(s==='shift'){
+  if(s==='shift'&&S.conn.kintai.url){
+    body=kintaiShiftView();
+  }else if(s==='shift'){
     const days=[...Array(7)].map((_,k)=>addDays(ui.shiftWeek,k));
     const counts=days.map(d=>S.members.filter(m=>S.shifts[m+'|'+d]==='出').length);
     body=`<div class="card"><div class="toolbar" style="margin-bottom:10px">
@@ -696,6 +707,11 @@ function vSet(){
     <label class="f"><span>中継GASのURL（…/exec）</span><input id="c_cal_url" type="url" value="${esc(S.conn.cal.url)}"></label>
     <label class="f"><span>合言葉</span><input id="c_cal_token" type="password" autocomplete="off" value="${esc(S.conn.cal.token)}"></label>
     <div><button class="btn sm" data-act="connTest" data-k="cal">保存して接続テスト</button></div>
+    <h3 style="margin:10px 0 0;font-size:15px">勤怠アプリ（シフト・公休）</h3>
+    <div class="small muted">勤怠アプリのGASに「WORK連携」のコードを足して新バージョンでデプロイしたあと、勤怠アプリのURL（…/exec）と、そこで決めた合言葉を入れる。</div>
+    <label class="f"><span>勤怠アプリのURL（…/exec）</span><input id="c_kintai_url" type="url" value="${esc(S.conn.kintai.url)}"></label>
+    <label class="f"><span>合言葉</span><input id="c_kintai_token" type="password" autocomplete="off" value="${esc(S.conn.kintai.token)}"></label>
+    <div><button class="btn sm" data-act="connTest" data-k="kintai">保存して接続テスト</button></div>
     <div class="notice"><span class="grow"><b>GASアプリの埋め込み：</b>既存のGASアプリの doGet で返している画面に <span class="kbd">.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)</span> を付け足して、新しいバージョンでデプロイし直すと、NK →「GASアプリ」に埋め込めるようになる。</span></div></div>
   <div class="card setrow"><h2>AI連携（Gemini・無料枠）</h2>
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
@@ -885,6 +901,46 @@ function cellSheet(r,c){
       return 'skip'}});
 }
 
+/* ===== 勤怠アプリのシフト（公休）表示・編集 ===== */
+async function loadKintai(){
+  ui.ks.busy=true;ui.ks.err='';render();
+  try{const j=await bridge('kintai',{action:'shift'});ui.ks.data=j;ui.ks.pending={};ui.ks.at=Date.now()}
+  catch(e){ui.ks.err=e.message}
+  ui.ks.busy=false;render();
+}
+function ksVal(month,ni,day){const k=month+'|'+ni+'|'+day;if(k in ui.ks.pending)return ui.ks.pending[k];
+  const m=ui.ks.data[month==='next'?'nextMonth':'thisMonth'];const r=m&&m.rows[day-1];return !!(r&&r.koukyu[ni])}
+function kintaiShiftView(){
+  const d=ui.ks.data;const mon=ui.ks.month;const n=Object.keys(ui.ks.pending).length;
+  const bar=`<div class="toolbar"><div class="chips"><button class="chip ${mon==='this'?'on':''}" data-act="ksMon" data-k="this">${d?esc(d.thisMonth.label):'今月'}</button><button class="chip ${mon==='next'?'on':''}" data-act="ksMon" data-k="next">${d?esc(d.nextMonth.label):'来月'}</button></div>
+    <div style="display:flex;gap:8px">${n?`<button class="btn sm sub" data-act="ksUndo">取り消し</button>`:''}<button class="btn sm ${n?'':'sub'}" data-act="${n?'ksSave':'ksReload'}">${ui.ks.busy?'通信中…':n?`保存（${n}件）`:'再読み込み'}</button></div></div>`;
+  if(ui.ks.err)return bar+`<div class="card"><div class="empty short">${esc(ui.ks.err)}</div></div>`;
+  if(!d)return bar+`<div class="card"><div class="empty">${ui.ks.busy?'勤怠アプリから読み込み中…':'読み込んでいないよ'}</div></div>`;
+  const M=d[mon==='next'?'nextMonth':'thisMonth'];const names=d.names;
+  const todayD=+TODAY.slice(8);
+  const today=mon==='this'?`<div class="card" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 16px">
+      <b style="font-size:14px">本日 ${esc(d.todayLabel)}</b>
+      <span class="small muted">出勤</span>${d.working.map(x=>`<span class="pill ok">${esc(x)}</span>`).join('')||'<span class="small muted">なし</span>'}
+      <span class="small muted" style="margin-left:6px">公休</span>${d.off.map(x=>`<span class="pill">${esc(x)}</span>`).join('')||'<span class="small muted">なし</span>'}</div>`:'';
+  return bar+today+`<div class="card" style="padding:10px"><div class="small muted" style="margin:0 4px 8px">マスをタップで「公休」⇔「出勤」を切り替え。最後に「保存」で勤怠アプリに反映（月のシフト表の「公休」も自動で更新される）。</div>
+    <div class="tablewrap sheetwrap" data-fit><table class="grid ks"><thead><tr><th>日</th>${names.map(x=>`<th>${esc(x)}</th>`).join('')}<th>出勤</th></tr></thead><tbody>
+    ${M.rows.map(r=>{let cnt=0;const cells=names.map((nm,ni)=>{const v=ksVal(mon,ni,r.day);if(!v)cnt++;const ch=(mon+'|'+ni+'|'+r.day) in ui.ks.pending;
+        return `<td class="kc ${v?'off':''} ${ch?'chg':''}" data-act="ksCell" data-n="${ni}" data-d="${r.day}">${v?'公休':''}</td>`}).join('');
+      const isT=mon==='this'&&r.day===todayD;
+      return `<tr class="${isT?'today':''}"><th class="${r.sun?'sun':r.sat?'sat':''}">${r.day}(${esc(r.wd)})</th>${cells}<td class="cnt ${cnt<S.minStaff?'short':''}">${cnt}</td></tr>`}).join('')}
+    </tbody></table></div></div>`;
+}
+async function ksSave(){
+  const by={};Object.entries(ui.ks.pending).forEach(([k,v])=>{const [mon,ni,day]=k.split('|');const nm=ui.ks.data.names[+ni];(by[nm]=by[nm]||[]).push({month:mon,day:+day,koukyu:v})});
+  ui.ks.busy=true;render();let saved=0,errs=[];
+  for(const [nm,changes] of Object.entries(by)){
+    try{const j=await bridge('kintai',{action:'save',name:nm,changes:JSON.stringify(changes)});saved+=j.saved||0}catch(e){errs.push(nm+'：'+e.message)}
+  }
+  ui.ks.busy=false;
+  toast(errs.length?('一部保存できなかった：'+errs.join('／')):`${saved}件を勤怠アプリに保存した`);
+  await loadKintai();
+}
+
 /* ===== GASアプリ埋め込み ===== */
 function embedView(){
   const E=S.embeds;
@@ -897,11 +953,11 @@ function embedView(){
 const KINTAI_PAGES=[['勤怠報告',''],['実績入力','jisseki'],['公休確認','koukyu'],['公休編集','koukyuedit'],['シフト一覧','shift'],['アラート設定','alert'],['店舗管理','store']];
 function embBulkSheet(){
   openSheet({title:'勤怠アプリを一括登録',note:'勤怠アプリのURL（…/exec）を1回貼るだけで、7つの画面をまとめて登録する。',
-    fields:[{k:'url',label:'勤怠アプリのURL（…/exec まで）',type:'url',val:''}],
+    fields:[{k:'url',label:'勤怠アプリのURL（…/exec まで）',type:'url',val:''},{k:'uid',label:'自分のID（勤怠アプリで使っている英字のID）',val:'',hint:'入れると管理者用の画面（シフト一覧・公休編集など）がそのまま使える'}],
     onSave:o=>{const base=o.url.replace(/\s+/g,'').replace(/[?#].*$/,'');
       if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(base))return '…/exec で終わるURLを貼ってね';
-      let added=0;KINTAI_PAGES.forEach(([n,p])=>{const url=p?base+'?page='+p:base;if(!S.embeds.some(x=>x.url===url)){S.embeds.push({id:uid(),name:n,url});added++}});
-      const sh=S.embeds.find(x=>x.url===base+'?page=shift');if(sh)ui.emb=sh.id;
+      const idq=o.uid?('id='+encodeURIComponent(o.uid.toLowerCase())):'';let added=0;KINTAI_PAGES.forEach(([n,p])=>{const q=[p?'page='+p:'',idq].filter(Boolean).join('&');const url=q?base+'?'+q:base;if(!S.embeds.some(x=>x.url===url)){S.embeds.push({id:uid(),name:n,url});added++}});
+      const sh=S.embeds.find(x=>x.url.includes('page=shift'));if(sh)ui.emb=sh.id;
       setTimeout(()=>toast(added+'画面を登録した'),0)}});
 }
 function embSheet(x){
@@ -1059,8 +1115,8 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 function commit(msg){save();render();if(msg)toast(msg)}
 
 const ACT={
-  nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
-  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets()},
+  nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;if(ui.view==='nk'&&ui.seg.nk==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)setTimeout(loadKintai,0);try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
+  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets();if(el.dataset.g==='nk'&&el.dataset.k==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)loadKintai()},
   pick:el=>{ui.sel=el.dataset.d;ui.week=mondayOf(ui.sel);render()},
   wk:el=>{ui.week=addDays(ui.week,+el.dataset.d);ui.sel=ui.week;render()},
   swk:el=>{ui.shiftWeek=addDays(ui.shiftWeek,+el.dataset.d);render()},
@@ -1089,6 +1145,15 @@ const ACT={
   cell:el=>cellSheet(+el.dataset.r,+el.dataset.c),
   embPick:el=>{ui.emb=el.dataset.k;render()},
   embAdd:()=>embSheet(),
+  ksMon:el=>{ui.ks.month=el.dataset.k;render()},
+  ksCell:el=>{if(ui.ks.busy)return;const mon=ui.ks.month,ni=+el.dataset.n,day=+el.dataset.d,k=mon+'|'+ni+'|'+day;
+    const m=ui.ks.data[mon==='next'?'nextMonth':'thisMonth'];const orig=!!(m.rows[day-1].koukyu[ni]);
+    const nv=!ksVal(mon,ni,day);if(nv===orig)delete ui.ks.pending[k];else ui.ks.pending[k]=nv;
+    const sc=document.querySelector('.sheetwrap');const st=sc?sc.scrollTop:0,sl=sc?sc.scrollLeft:0;render();
+    const sc2=document.querySelector('.sheetwrap');if(sc2){sc2.scrollTop=st;sc2.scrollLeft=sl}},
+  ksSave:()=>ksSave(),
+  ksReload:()=>loadKintai(),
+  ksUndo:()=>{ui.ks.pending={};render()},
   embBulk:()=>embBulkSheet(),
   embEdit:el=>embSheet(S.embeds.find(x=>x.id===el.dataset.k)),
   connTest:async el=>{const k=el.dataset.k;readConn();save();el.textContent='確認中…';
@@ -1130,7 +1195,7 @@ const ACT={
 };
 function readConn(){const v=id=>(document.getElementById(id)?.value||'').trim();
   if(!document.getElementById('c_sheet_url'))return;
-  S.conn={sheet:{url:v('c_sheet_url'),token:v('c_sheet_token'),open:v('c_sheet_open')},cal:{url:v('c_cal_url'),token:v('c_cal_token')}};ui.sh.at=0}
+  S.conn={sheet:{url:v('c_sheet_url'),token:v('c_sheet_token'),open:v('c_sheet_open')},cal:{url:v('c_cal_url'),token:v('c_cal_token')},kintai:{url:v('c_kintai_url'),token:v('c_kintai_token')}};ui.sh.at=0}
 function setTheme(k){theme=k;try{localStorage.setItem(KEY+'_theme',k)}catch(e){}applyTheme();render();toast('表示：'+THEMES.find(t=>t[0]===k)[1])}
 function armConfirm(el,msg,fn){if(el.dataset.armed){fn();return}el.dataset.armed='1';const o=el.textContent;el.textContent=msg;setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent=o}},3500)}
 
@@ -1145,7 +1210,7 @@ document.addEventListener('change',e=>{
   if(t==='stage'){const d=byId(S.deals,el.dataset.id);if(d){d.stage=el.value;commit(el.value==='成約'?'成約おめでとう！':'')}}
   if(t==='adStatus'){const a=byId(S.ads,el.dataset.id);if(a){a.status=el.value;commit()}}
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
-  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
+  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.conn.kintai)S.conn.kintai={url:'',token:''};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
 document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value});
 document.addEventListener('keydown',e=>{
