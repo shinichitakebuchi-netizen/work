@@ -280,6 +280,32 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .grid.ks tbody th.sun{color:var(--danger)}.grid.ks tbody th.sat{color:var(--genba)}
 .grid.ks tr.today th,.grid.ks tr.today td{box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
 .grid.ks td.cnt{text-align:center;font-weight:800}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.bcard{padding:10px 12px;border-radius:14px;background:var(--seg);min-width:0}
+.bch{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.bch b{font-size:13.5px}.bchv{font-family:var(--num);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.bchv small{font-size:11.5px;color:var(--muted);margin-left:2px}
+.bnone{font-size:12.5px;color:var(--faint);padding:30px 4px;text-align:center}
+.bchart .cb{fill:var(--nk);opacity:.8}.bchart .cbo{fill:var(--danger);opacity:.8}
+.lgb{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--nk)}
+.titems{display:flex;flex-direction:column;gap:8px}
+.titem{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:12px;background:var(--seg)}
+.tname{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.tin{display:flex;align-items:center;gap:6px}
+.tin label{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--muted);font-weight:700}
+.tin input{width:58px;padding:7px 6px;border-radius:9px;border:1px solid var(--line);background:var(--bg);font-size:16px;text-align:center;font-variant-numeric:tabular-nums}
+.tdel{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--danger)}
+.tdel svg{width:16px;height:16px}
+.libs{display:flex;flex-wrap:wrap;gap:6px}
+.lib{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--glass-strong);font-weight:700;font-size:13.5px}
+.lib.used{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:transparent}
+.lib.edit{border-style:dashed}.lib.edit button{width:20px;height:20px;display:grid;place-items:center;color:var(--danger)}.lib.edit svg{width:13px;height:13px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:10px}
+.cprow{display:flex;flex-direction:column;gap:6px}
+.frow3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.frow3 small{font-weight:600;color:var(--faint)}
+.bmeal{grid-template-columns:72px minmax(0,1fr) 80px!important}
+.bmeal input[type=number]{width:100%;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px}
 .bsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .bsum .lab{font-size:12px;font-weight:700;color:var(--muted)}
 .bsum .big{font-size:28px}.bsum .big small{font-size:13px;color:var(--muted);margin-left:2px}
@@ -515,7 +541,6 @@ if(!S.names)S.names={app:'WORK'};
 if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};
 if(!S.conn.kintai)S.conn.kintai={url:'',token:''};
 if(!S.embeds)S.embeds=[];
-if(!S.body)S.body=bodyDef();
 if(!S.gcal)S.gcal={at:0,events:[]};
 function appName(){return (S.names&&S.names.app)||'WORK'}
 function applyNames(){Object.keys(AREAS).forEach(k=>{const n=(S.names&&S.names[k])||{};AREAS[k].name=n.name||AREA_DEF[k].name;AREAS[k].full=n.full||AREA_DEF[k].full})}
@@ -528,7 +553,7 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',bm:{cpy:'t',tab:'cal',month:THIS_MONTH,mwd:1,odate:'',metric:'w'},ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},al:{data:null,edit:null,busy:false,err:'',at:0},td:{data:null,busy:false,err:'',at:0}};
+let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',bm:{cpy:'t',month:THIS_MONTH,mwd:1,odate:'',range:'m',part:'胸',libEdit:false},ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},al:{data:null,edit:null,busy:false,err:'',at:0},td:{data:null,busy:false,err:'',at:0}};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
@@ -585,6 +610,7 @@ function vHome(){
       ${bodyStat()}
     </div>
     ${todayCard()}
+    ${bodyHomeCard()}
     <div class="card">
       <div class="week">
         <button class="navarrow" data-act="wk" data-d="-7" aria-label="前の週">${ic('l')}</button>
@@ -1082,13 +1108,26 @@ function embSheet(x){
 /* ===== ボディメイク ===== */
 const BPARTS=['胸','肩','腕','背中','脚','腹','全身','その他'];
 const BMEALS=[['b','朝'],['l','昼'],['d','夜'],['s','間食']];
+const BRANGES=[['w','週'],['m','月'],['q','3か月'],['a','全期間']];
+const BLIB_DEF=[['胸','ベンチプレス'],['胸','ダンベルベンチプレス'],['胸','ダンベルフライ'],['肩','ショルダープレス'],['肩','サイドレイズ'],['腕','アームカール'],['腕','トライセプスエクステンション'],
+  ['背中','デッドリフト'],['背中','ラットプルダウン'],['背中','ベントオーバーロウ'],['脚','スクワット'],['脚','レッグプレス'],['脚','ブルガリアンスクワット'],['腹','クランチ'],['腹','プランク']];
 function bodyDef(){
-  const plan={};for(let i=0;i<7;i++)plan[i]={t:[],m:{b:'',l:'',d:'',s:'',kcal:''}};
-  return {goal:{startDate:'',startW:'',startF:'',targetW:'',targetF:'',targetDate:''},plan,over:{},logs:{},
-    lib:[{name:'ベンチプレス',part:'胸'},{name:'デッドリフト',part:'背中'},{name:'スクワット',part:'脚'},{name:'ショルダープレス',part:'肩'},{name:'アームカール',part:'腕'}]};
+  const plan={};for(let i=0;i<7;i++)plan[i]={t:[],m:{}};
+  return {goal:{startDate:'',startW:'',startF:'',targetW:'',targetF:'',targetDate:'',kcal:''},plan,over:{},logs:{},lib:BLIB_DEF.map(([part,name])=>({name,part})),libV:2};
+}
+function bMigrate(){
+  const b=S.body;if(!b)return;
+  const fix=P=>{if(!P)return;P.t=(P.t||[]).filter(x=>x.kind!=='c');if(!P.m)P.m={};
+    if(P.m.kcal&&!b.goal.kcal)b.goal.kcal=P.m.kcal;delete P.m.kcal};
+  for(let i=0;i<7;i++){if(!b.plan[i])b.plan[i]={t:[],m:{}};fix(b.plan[i])}
+  Object.values(b.over||{}).forEach(fix);
+  if(!b.lib)b.lib=[];
+  if(!b.libV){BLIB_DEF.forEach(([part,name])=>{if(!b.lib.some(x=>x.name===name))b.lib.push({name,part})});b.libV=2}
+  if(b.goal&&b.goal.kcal===undefined)b.goal.kcal='';
 }
 const B=()=>S.body;
 const n1=x=>Math.round(x*10)/10;
+const fmtN=x=>Math.round(x).toLocaleString('ja-JP');
 const dayDiff=(a,b)=>Math.round((new Date(b+'T00:00')-new Date(a+'T00:00'))/864e5);
 const wdOf=d=>new Date(d+'T00:00').getDay();
 function bPlan(date){return B().over[date]||B().plan[wdOf(date)]}
@@ -1118,6 +1157,23 @@ function bStatus(){
   let newDate='';if(needPct>1&&left>0){const weeks=left/(lw.v*0.0075);newDate=addDays(lw.date,Math.ceil(weeks*7))}
   return {lw,ideal,diff,left,need,needPct,newDate};
 }
+/* 強度：回数の範囲からの一般的な目安（1〜5回＝筋力、6〜12回＝筋肥大、13回以上＝筋持久力） */
+function bZone(reps){reps=+reps||0;return !reps?null:reps<=5?['高強度','var(--danger)']:reps<=12?['中強度','var(--accent)']:['低強度','var(--genba)']}
+const bVol=x=>(+x.sets||0)*(+x.reps||0)*(+x.kg||0);
+function bItemText(x){return `${x.name}${x.sets?` ${x.sets}×${x.reps||0}`:''}${+x.kg?` ${x.kg}kg`:''}`}
+function bDaySummary(t){
+  if(!t.length)return '休養日';
+  const v=t.reduce((a,x)=>a+bVol(x),0);const z={};t.forEach(x=>{const k=bZone(x.reps);if(k)z[k[0]]=(z[k[0]]||0)+(+x.sets||1)});
+  const main=Object.entries(z).sort((a,b)=>b[1]-a[1])[0];
+  return `${t.length}種目・${t.reduce((a,x)=>a+(+x.sets||0),0)}セット・総ボリューム ${fmtN(v)}kg${main?`・${main[0]}中心`:''}`;
+}
+function bPlanKcal(P){return BMEALS.reduce((a,[k])=>a+(+P.m[k+'k']||0),0)}
+function bTargetKcal(d){const p=bPlanKcal(bPlan(d));return p||(+B().goal.kcal||0)}
+function bDayKcal(d){
+  const lg=B().logs[d];if(!lg)return null;const P=bPlan(d);let s=0,any=false;
+  BMEALS.forEach(([k])=>{const a=+(lg.mk||{})[k];if(a){s+=a;any=true}else if(lg.md&&lg.md[k]&&+P.m[k+'k']){s+=+P.m[k+'k'];any=true}});
+  return any?s:null;
+}
 function bodyStat(){
   const st=bStatus();if(!st||st.noLog)return '';
   const done=st.left<=0;
@@ -1125,14 +1181,80 @@ function bodyStat(){
 }
 function bodyContext(L){
   const g=B().goal;if(!bGoalOk())return;
-  const st=bStatus(),p=bPlan(TODAY);
+  const st=bStatus(),p=bPlan(TODAY),lm=bLatest('mm'),lf=bLatest('f');
   L.push(`【ボディメイク】${g.startDate} ${g.startW}kg → 目標 ${g.targetDate} ${g.targetW}kg${g.targetF?`・体脂肪${g.targetF}%`:''}`);
-  if(st&&!st.noLog)L.push(`- 最新 ${st.lw.date} ${st.lw.v}kg／その日の理想 ${n1(st.ideal)}kg／必要ペース 週${n1(st.need)}kg`);
+  if(st&&!st.noLog)L.push(`- 最新 ${st.lw.date} ${st.lw.v}kg${lf?`・体脂肪${lf.v}%`:''}${lm?`・筋量${lm.v}kg`:''}／その日の理想 ${n1(st.ideal)}kg／必要ペース 週${n1(st.need)}kg`);
   L.push(`- 今日のトレーニング：${p.t.map(bItemText).join('、')||'休養日'}`);
-  L.push(`- 今日の食事：${BMEALS.map(([k,l])=>p.m[k]?l+'：'+p.m[k]:'').filter(Boolean).join('／')||'未設定'}`);
+  L.push(`- 今日の食事：${BMEALS.map(([k,l])=>p.m[k]?`${l}：${p.m[k]}${+p.m[k+'k']?`（${p.m[k+'k']}kcal）`:''}`:'').filter(Boolean).join('／')||'未設定'}`);
+  const ks=[...Array(7)].map((_,i)=>bDayKcal(addDays(TODAY,-i))).filter(v=>v!=null);
+  if(ks.length)L.push(`- 直近7日の平均摂取 ${fmtN(ks.reduce((a,b)=>a+b,0)/ks.length)}kcal（目標 ${bTargetKcal(TODAY)||'未設定'}kcal）`);
 }
-function bItemText(x){return x.kind==='c'?`${x.name} ${x.min||0}分`:`${x.name}${x.sets?` ${x.sets}×${x.reps||0}`:''}${+x.kg?` ${x.kg}kg`:''}`}
 
+/* ---------- グラフ ---------- */
+function bRange(){
+  const r=ui.bm.range;
+  if(r==='w')return [addDays(TODAY,-6),TODAY];
+  if(r==='m')return [addDays(TODAY,-29),TODAY];
+  if(r==='q')return [addDays(TODAY,-89),TODAY];
+  const ds=Object.keys(B().logs).sort();const g=B().goal;
+  let s=ds[0]||TODAY;if(g.startDate&&g.startDate<s)s=g.startDate;
+  let e=TODAY;if(bGoalOk()&&g.targetDate>e)e=g.targetDate;
+  return [s,e>s?e:addDays(s,6)];
+}
+const BMET={w:['体重','kg','var(--accent)'],f:['体脂肪率','%','var(--genba)'],mm:['筋量','kg','var(--ark)']};
+function bLineChart(key){
+  const [xs,xe]=bRange();const L=B().logs;const g=B().goal;const [ttl,unit,col]=BMET[key];
+  const pts=Object.keys(L).filter(d=>d>=xs&&d<=xe&&+L[d][key]).sort().map(d=>({d,v:+L[d][key]}));
+  const last=bLatest(key);
+  const head=`<div class="bch"><b>${ttl}</b><span class="bchv" style="color:${col}">${last?last.v:'—'}<small>${last?unit:''}</small></span></div>`;
+  let iA=null,iB=null;
+  if((key==='w'||key==='f')&&bGoalOk()&&bIdeal(g.startDate,key)!=null){
+    const a=g.startDate>xs?g.startDate:xs,b=g.targetDate<xe?g.targetDate:xe;
+    if(a<=b){iA={d:a,v:bIdeal(a,key)};iB={d:b,v:bIdeal(b,key)}}
+  }
+  const vals=pts.map(p=>p.v).concat(iA?[iA.v,iB.v]:[]);
+  if(!pts.length)return `<div class="bcard">${head}<div class="bnone">この期間の記録はまだないよ</div></div>`;
+  let lo=Math.min(...vals),hi=Math.max(...vals);const pv=Math.max(0.4,(hi-lo)*0.15);lo-=pv;hi+=pv;
+  const W=320,H=150,l=34,r=8,t=8,b=20,span=Math.max(1,dayDiff(xs,xe));
+  const X=d=>l+(W-l-r)*dayDiff(xs,d)/span,Y=v=>t+(H-t-b)*(1-(v-lo)/(hi-lo));
+  const grid=[0,1,2].map(i=>lo+(hi-lo)*i/2).map(v=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" class="cg"/><text x="${l-4}" y="${Y(v)+3.5}" class="ct" text-anchor="end">${n1(v)}</text>`).join('');
+  const ideal=iA?`<line x1="${X(iA.d)}" y1="${Y(iA.v)}" x2="${X(iB.d)}" y2="${Y(iB.v)}" class="ci"/>`:'';
+  const line=pts.length>1?`<polyline points="${pts.map(p=>X(p.d)+','+Y(p.v)).join(' ')}" style="stroke:${col}" class="ca"/>`:'';
+  const dots=pts.map((p,i)=>`<circle cx="${X(p.d)}" cy="${Y(p.v)}" r="${i===pts.length-1?3.6:pts.length>40?1.4:2.2}" style="fill:${col}"/>`).join('');
+  const tx=TODAY>xs&&TODAY<xe?`<line x1="${X(TODAY)}" x2="${X(TODAY)}" y1="${t}" y2="${H-b}" class="ctd"/>`:'';
+  return `<div class="bcard">${head}<svg viewBox="0 0 ${W} ${H}" class="bchart" role="img" aria-label="${ttl}の推移">${grid}${tx}${ideal}${line}${dots}
+    <text x="${l}" y="${H-5}" class="ct">${fmtD(xs)}</text><text x="${W-r}" y="${H-5}" class="ct" text-anchor="end">${fmtD(xe)}</text></svg></div>`;
+}
+function bKcalChart(){
+  let [xs,xe]=bRange();if(xe>TODAY)xe=TODAY;
+  const days=[];for(let d=xs;d<=xe;d=addDays(d,1))days.push(d);
+  const data=days.map(d=>({d,v:bDayKcal(d),t:bTargetKcal(d)}));
+  const has=data.filter(x=>x.v!=null);
+  const avg=has.length?has.reduce((a,x)=>a+x.v,0)/has.length:0;
+  const tg=data.map(x=>x.t).filter(Boolean);const tAvg=tg.length?tg.reduce((a,b)=>a+b,0)/tg.length:0;
+  const head=`<div class="bch"><b>摂取カロリー</b><span class="bchv" style="color:var(--nk)">${has.length?fmtN(avg):'—'}<small>${has.length?'kcal/日':''}</small></span></div>`;
+  if(!has.length)return `<div class="bcard">${head}<div class="bnone">記録画面で食事をチェックすると、カロリーがここに出るよ</div></div>`;
+  const hi=Math.max(...has.map(x=>x.v),tAvg)*1.12;
+  const W=320,H=150,l=34,r=8,t=8,b=20;const bw=(W-l-r)/days.length;
+  const Y=v=>t+(H-t-b)*(1-v/hi);
+  const grid=[0,hi/2,hi].map(v=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" class="cg"/><text x="${l-4}" y="${Y(v)+3.5}" class="ct" text-anchor="end">${fmtN(v)}</text>`).join('');
+  const bars=data.map((x,i)=>x.v==null?'':`<rect x="${l+i*bw+bw*0.15}" y="${Y(x.v)}" width="${Math.max(1,bw*0.7)}" height="${H-b-Y(x.v)}" rx="${Math.min(3,bw*0.3)}" class="${x.t&&x.v>x.t*1.05?'cbo':'cb'}"/>`).join('');
+  const tl=tAvg?`<line x1="${l}" x2="${W-r}" y1="${Y(tAvg)}" y2="${Y(tAvg)}" class="ci"/>`:'';
+  return `<div class="bcard">${head}<svg viewBox="0 0 ${W} ${H}" class="bchart" role="img" aria-label="摂取カロリー">${grid}${bars}${tl}
+    <text x="${l}" y="${H-5}" class="ct">${fmtD(xs)}</text><text x="${W-r}" y="${H-5}" class="ct" text-anchor="end">${fmtD(xe)}</text></svg></div>`;
+}
+function bChartsCard(title){
+  return `<div class="card"><div class="card-h"><h2>${title}</h2><div class="chips">${BRANGES.map(([k,l])=>`<button class="chip ${ui.bm.range===k?'on':''}" data-act="bRange" data-k="${k}">${l}</button>`).join('')}</div></div>
+    <div class="bgrid">${bLineChart('w')}${bLineChart('f')}${bLineChart('mm')}${bKcalChart()}</div>
+    <div class="blegend small muted"><span><b class="lgi"></b>理想の道筋</span><span><b class="lgb"></b>カロリー（目標超えは赤）</span><span><b class="lgi"></b>点線（カロリー）＝目標</span></div></div>`;
+}
+function bodyHomeCard(){
+  const any=Object.keys(B().logs).length||bGoalOk();
+  if(!any)return '';
+  return bChartsCard('ボディメイク');
+}
+
+/* ---------- 画面 ---------- */
 function vBody(){
   const t=ui.seg.body||'cal';
   let body=t==='trend'?bTrendView():t==='goal'?bGoalView():t==='menu'?bMenuView():bCalView();
@@ -1162,38 +1284,17 @@ function bCalView(){
     <div class="bcal">${['月','火','水','木','金','土','日'].map(w=>`<div class="bwh">${w}</div>`).join('')}
     ${cells.map(d=>{const p=bPlan(d),lg=L[d]||{},inM=d.slice(0,7)===ui.bm.month;
       const tn=p.t.length,td=p.t.filter(x=>lg.td&&lg.td[x.id]).length;
-      const mk=BMEALS.filter(([k])=>p.m[k]),md=mk.filter(([k])=>lg.md&&lg.md[k]).length;
-      const past=d<=TODAY&&(!B().goal.startDate||d>=B().goal.startDate);
-      const tc=!tn?'rest':td===tn?'ok':td?'part':past&&d<TODAY?'miss':'plan';
-      const mc=!mk.length?'':md===mk.length?'ok':md?'part':past&&d<TODAY?'miss':'plan';
+      const mk=BMEALS.filter(([k])=>p.m[k]),md=mk.filter(([k])=>(lg.md&&lg.md[k])||+(lg.mk||{})[k]).length;
+      const past=d<TODAY&&(!B().goal.startDate||d>=B().goal.startDate);
+      const tc=!tn?'rest':td===tn?'ok':td?'part':past?'miss':'plan';
+      const mc=!mk.length?'':md===mk.length?'ok':md?'part':past?'miss':'plan';
       return `<button class="bday ${inM?'':'out'} ${d===TODAY?'today':''} ${B().over[d]?'ovr':''}" data-act="bDay" data-d="${d}">
         <span class="bn">${+d.slice(8)}</span>${+lg.w?`<span class="bw">${lg.w}</span>`:''}
         <span class="bdots">${tn?`<i class="t ${tc}" title="トレーニング"></i>`:'<em>休</em>'}${mc?`<i class="m ${mc}" title="食事"></i>`:''}</span></button>`}).join('')}</div>
     <div class="blegend small muted"><span><i class="t ok"></i>トレ完了</span><span><i class="t part"></i>一部</span><span><i class="t miss"></i>未実施</span><span><i class="m ok"></i>食事OK</span><span>休＝休養日</span><span><b style="color:var(--accent)">●</b>枠＝その日だけメニュー変更</span></div></div>`;
 }
-function bChart(key){
-  const g=B().goal,L=B().logs;const pts=Object.keys(L).filter(d=>+L[d][key]).sort().map(d=>({d,v:+L[d][key]}));
-  const s0=bGoalOk()?g.startDate:(pts[0]&&pts[0].d),e0=bGoalOk()?g.targetDate:(pts.length?pts[pts.length-1].d:'');
-  if(!s0||!e0||s0>=e0)return '<div class="empty">記録が2日分以上になるとグラフが出るよ</div>';
-  const xs=pts.length&&pts[0].d<s0?pts[0].d:s0,xe=pts.length&&pts[pts.length-1].d>e0?pts[pts.length-1].d:e0;
-  const span=Math.max(1,dayDiff(xs,xe));
-  const iv=[bIdeal(g.startDate,key),key==='f'?+g.targetF:+g.targetW].filter(v=>v);
-  const vals=pts.map(p=>p.v).concat(iv);if(!vals.length)return '<div class="empty">データがまだないよ</div>';
-  let lo=Math.min(...vals),hi=Math.max(...vals);const padv=Math.max(0.5,(hi-lo)*0.12);lo-=padv;hi+=padv;
-  const W=640,H=230,l=44,r=14,t=12,b=26;
-  const X=d=>l+(W-l-r)*dayDiff(xs,d)/span,Y=v=>t+(H-t-b)*(1-(v-lo)/(hi-lo));
-  const ticks=[0,1,2,3].map(i=>lo+(hi-lo)*i/3);
-  const grid=ticks.map(v=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" class="cg"/><text x="${l-6}" y="${Y(v)+4}" class="ct" text-anchor="end">${n1(v)}</text>`).join('');
-  const ideal=bGoalOk()&&iv.length===2?`<line x1="${X(g.startDate)}" y1="${Y(iv[0])}" x2="${X(g.targetDate)}" y2="${Y(iv[1])}" class="ci"/>`:'';
-  const line=pts.length>1?`<polyline points="${pts.map(p=>X(p.d)+','+Y(p.v)).join(' ')}" class="ca"/>`:'';
-  const dots=pts.map((p,i)=>`<circle cx="${X(p.d)}" cy="${Y(p.v)}" r="${i===pts.length-1?4.5:2.6}" class="cd"/>`).join('');
-  const tx=TODAY>=xs&&TODAY<=xe?`<line x1="${X(TODAY)}" x2="${X(TODAY)}" y1="${t}" y2="${H-b}" class="ctd"/><text x="${X(TODAY)}" y="${H-8}" class="ct" text-anchor="middle">今日</text>`:'';
-  const lab=`<text x="${l}" y="${H-8}" class="ct">${fmtD(xs)}</text><text x="${W-r}" y="${H-8}" class="ct" text-anchor="end">${fmtD(xe)}</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" class="bchart" role="img" aria-label="${key==='f'?'体脂肪率':'体重'}の推移">${grid}${tx}${ideal}${line}${dots}${lab}</svg>
-    <div class="blegend small muted"><span><b class="lgi"></b>理想の道筋</span><span><b class="lga"></b>実際の記録</span></div>`;
-}
 function bTrendView(){
-  const st=bStatus(),g=B().goal,k=ui.bm.metric;
+  const st=bStatus();
   let fix='';
   if(st&&!st.noLog&&st.left>0){
     const behind=st.diff>0.3,ahead=st.diff<-0.3;
@@ -1204,7 +1305,7 @@ function bTrendView(){
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm sub" data-act="bReplan" data-k="keep">今の体重から引き直す（期限はそのまま）</button></div>
       <div class="small muted">引き直すと、スタートが「${fmtD(st.lw.date)}・${st.lw.v}kg」になって、理想の線がそこから引かれる。過去の記録はそのまま残る。</div></div>`;
   }
-  return bSummary()+`<div class="card"><div class="card-h"><h2>推移</h2><div class="chips"><button class="chip ${k==='w'?'on':''}" data-act="bMetric" data-k="w">体重</button><button class="chip ${k==='f'?'on':''}" data-act="bMetric" data-k="f">体脂肪率</button></div></div>${bChart(k)}</div>`+fix;
+  return bSummary()+bChartsCard('推移')+fix;
 }
 function bGoalView(){
   const g=B().goal,p=bPace(),lw=bLatest('w'),lf=bLatest('f');
@@ -1212,6 +1313,7 @@ function bGoalView(){
     <div class="frow"><label class="f"><span>スタート日</span><input id="bg_sd" type="date" value="${esc(g.startDate||TODAY)}"></label><label class="f"><span>期限</span><input id="bg_td" type="date" value="${esc(g.targetDate)}"></label></div>
     <div class="frow"><label class="f"><span>スタート時の体重（kg）</span><input id="bg_sw" type="number" step="0.1" inputmode="decimal" value="${esc(g.startW||(lw?lw.v:''))}"></label><label class="f"><span>目標の体重（kg）</span><input id="bg_tw" type="number" step="0.1" inputmode="decimal" value="${esc(g.targetW)}"></label></div>
     <div class="frow"><label class="f"><span>スタート時の体脂肪率（%・任意）</span><input id="bg_sf" type="number" step="0.1" inputmode="decimal" value="${esc(g.startF||(lf?lf.v:''))}"></label><label class="f"><span>目標の体脂肪率（%・任意）</span><input id="bg_tf" type="number" step="0.1" inputmode="decimal" value="${esc(g.targetF)}"></label></div>
+    <label class="f"><span>1日の目標カロリー（kcal・任意）</span><input id="bg_kcal" type="number" inputmode="numeric" value="${esc(g.kcal)}"><span class="hint">メニューで食事ごとのカロリーを入れている曜日は、その合計が目標になる。入れていない曜日はこの数字を使う。</span></label>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="bGoalSave">保存</button><button class="btn sub" data-act="bSuggest">おすすめの期限を入れる</button></div>
     <div class="small muted">「おすすめの期限」は、体重の0.75%／週で落とした場合の日付。一般に週0.5〜1%が、筋肉を残しながら脂肪を落としやすいペースと言われてる。</div></div>
     ${p?`<div class="card"><div class="card-h"><h2>この目標のペース</h2><span class="pill" style="--c:${p.judge[1]}">${p.judge[0]}</span></div>
@@ -1220,25 +1322,29 @@ function bGoalView(){
 function bEditTarget(){if(ui.bm.odate){const d=ui.bm.odate;if(!B().over[d])B().over[d]=JSON.parse(JSON.stringify(B().plan[wdOf(d)]));return B().over[d]}return B().plan[ui.bm.mwd]}
 function bMenuView(){
   const od=ui.bm.odate,P=od?(B().over[od]||B().plan[wdOf(od)]):B().plan[ui.bm.mwd];
-  const days=[1,2,3,4,5,6,0];
+  const days=[1,2,3,4,5,6,0];const part=ui.bm.part;
   const head=od?`<div class="notice"><span class="grow"><b>${fmtD(od)}だけ</b>のメニューを編集中。曜日の固定メニューは変わらない。</span><button class="btn sm sub" data-act="bOverEnd">固定メニューの編集に戻る</button>${B().over[od]?'<button class="btn sm danger" data-act="bOverDel">この日の変更をやめる</button>':''}</div>`
     :`<div class="chips">${days.map(w=>`<button class="chip ${ui.bm.mwd===w?'on':''}" data-act="bWd" data-k="${w}">${WD[w]}${B().plan[w].t.length?'':'・休'}</button>`).join('')}</div>`;
-  const lib=B().lib;
-  return head+`<div class="card setrow"><div class="card-h"><h2>トレーニング${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2>${P.t.length?'':'<span class="pill">休養日</span>'}</div>
-    ${P.t.map(x=>`<div class="row" style="cursor:default"><span class="stripe" style="--c:${x.kind==='c'?'var(--genba)':'var(--accent)'}"></span><div class="rbody"><div class="rtitle">${esc(bItemText(x))}</div><div class="rmeta">${x.kind==='c'?'有酸素':esc(x.part||'')}</div></div><button class="link" style="color:var(--danger)" data-act="bItemDel" data-id="${x.id}">削除</button></div>`).join('')}
-    <div class="badd">
-      <label class="f"><span>種類</span><select id="bi_kind"><option value="s">筋トレ</option><option value="c">有酸素</option></select></label>
-      <label class="f"><span>種目</span><input id="bi_name" list="bi_lib" placeholder="例：ベンチプレス"><datalist id="bi_lib">${lib.map(x=>`<option value="${esc(x.name)}">`).join('')}<option value="ランニング"><option value="ウォーキング"><option value="バイク"></datalist></label>
-      <label class="f"><span>部位</span><select id="bi_part">${BPARTS.map(p=>`<option>${p}</option>`).join('')}</select></label>
-      <label class="f"><span>セット</span><input id="bi_sets" type="number" inputmode="numeric"></label>
-      <label class="f"><span>回数</span><input id="bi_reps" type="number" inputmode="numeric"></label>
-      <label class="f"><span>重量kg</span><input id="bi_kg" type="number" step="0.5" inputmode="decimal"></label>
-      <label class="f"><span>時間（分）</span><input id="bi_min" type="number" inputmode="numeric"></label>
-      <div class="f" style="justify-content:flex-end"><button class="btn" data-act="bItemAdd">追加</button></div></div>
-    <div class="small muted">筋トレはセット・回数・重量、有酸素は時間を入れる。新しい種目名は自動で候補に追加される。</div></div>
-  <div class="card setrow"><h2>食事${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2>
-    ${BMEALS.map(([k,l])=>`<label class="f"><span>${l}</span><input id="bm_${k}" value="${esc(P.m[k]||'')}" data-change="bMeal" data-k="${k}" placeholder="例：${k==='b'?'オートミール＋プロテイン':k==='l'?'鶏むね定食':k==='d'?'魚・野菜・ご飯少なめ':'ナッツ'}"></label>`).join('')}
-    <label class="f"><span>目安カロリー（kcal・任意）</span><input id="bm_kcal" type="number" inputmode="numeric" value="${esc(P.m.kcal||'')}" data-change="bMeal" data-k="kcal"></label>
+  const lib=B().lib.filter(x=>x.part===part);
+  const used=new Set(P.t.map(x=>x.name));
+  const mealTotal=bPlanKcal(P);
+  return head+`<div class="card setrow">
+    <div class="card-h"><h2>トレーニング${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2><span class="small muted" id="bvol">${esc(bDaySummary(P.t))}</span></div>
+    ${P.t.length?`<div class="titems">${P.t.map(x=>{const z=bZone(x.reps);return `<div class="titem">
+      <div class="tname"><b>${esc(x.name)}</b><span class="small muted">${esc(x.part||'')}</span>${z?`<span class="pill" id="bz_${x.id}" style="--c:${z[1]}">${z[0]}</span>`:`<span class="pill" id="bz_${x.id}" hidden></span>`}</div>
+      <div class="tin"><label><input type="number" inputmode="numeric" value="${esc(x.sets||'')}" data-change="bItem" data-id="${x.id}" data-f="sets" aria-label="セット"><span>セット</span></label>
+      <label><input type="number" inputmode="numeric" value="${esc(x.reps||'')}" data-change="bItem" data-id="${x.id}" data-f="reps" aria-label="回数"><span>回</span></label>
+      <label><input type="number" step="0.5" inputmode="decimal" value="${esc(x.kg||'')}" data-change="bItem" data-id="${x.id}" data-f="kg" aria-label="重量"><span>kg</span></label>
+      <button class="tdel" data-act="bItemDel" data-id="${x.id}" aria-label="${esc(x.name)}を外す">${ic('x')}</button></div></div>`}).join('')}</div>`:'<div class="empty" style="padding:10px">休養日。下の部位から種目をタップして追加してね</div>'}
+    <div class="ghead" style="padding-top:6px">部位から種目を追加</div>
+    <div class="chips">${BPARTS.map(p=>`<button class="chip ${part===p?'on':''}" data-act="bPart" data-k="${p}">${p}</button>`).join('')}</div>
+    <div class="libs">${lib.map(x=>ui.bm.libEdit?`<span class="lib edit">${esc(x.name)}<button data-act="bLibDel" data-k="${esc(x.name)}" aria-label="${esc(x.name)}を種目リストから消す">${ic('x')}</button></span>`
+      :`<button class="lib ${used.has(x.name)?'used':''}" data-act="bAddEx" data-k="${esc(x.name)}">${used.has(x.name)?'✓ ':'＋ '}${esc(x.name)}</button>`).join('')||'<span class="small muted">この部位の種目はまだないよ</span>'}</div>
+    <div class="ai-input"><input id="bl_new" placeholder="${esc(part)}の種目を新しく登録" style="flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:16px"><button class="btn sm sub" data-act="bLibAdd">登録</button><button class="btn sm ${ui.bm.libEdit?'':'sub'}" data-act="bLibEdit">${ui.bm.libEdit?'完了':'種目を整理'}</button></div>
+    <div class="small muted">強度の目安：1〜5回＝高強度（筋力）、6〜12回＝中強度（筋肥大）、13回以上＝低強度（持久力）。総ボリューム＝セット×回数×重量。</div></div>
+  <div class="card setrow"><div class="card-h"><h2>食事${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2><span class="small muted" id="bmk">${mealTotal?`合計 ${fmtN(mealTotal)}kcal`:''}</span></div>
+    ${BMEALS.map(([k,l])=>`<div class="mrow"><label class="f"><span>${l}</span><input id="bm_${k}" value="${esc(P.m[k]||'')}" data-change="bMeal" data-k="${k}" placeholder="例：${k==='b'?'オートミール＋プロテイン':k==='l'?'鶏むね定食':k==='d'?'魚・野菜・ご飯少なめ':'ナッツ'}"></label>
+      <label class="f"><span>kcal</span><input id="bm_${k}k" type="number" inputmode="numeric" value="${esc(P.m[k+'k']||'')}" data-change="bMeal" data-k="${k}k"></label></div>`).join('')}
     <div class="small muted">入力すると自動で保存される。</div></div>
   ${od?'':`<div class="card setrow"><h2>${WD[ui.bm.mwd]}曜日のメニューをコピー</h2>
     <div class="seg" role="tablist">${[['t','トレーニングだけ'],['m','食事だけ'],['all','両方']].map(([k,l])=>`<button class="${ui.bm.cpy===k?'on':''}" data-act="bCpyMode" data-k="${k}">${l}</button>`).join('')}</div>
@@ -1249,16 +1355,17 @@ function bCpyLabel(){return ui.bm.cpy==='t'?'トレーニング':ui.bm.cpy==='m'
 function bCopyTo(ws){const src=B().plan[ui.bm.mwd],mode=ui.bm.cpy;
   ws.forEach(w=>{const P=B().plan[w];if(mode!=='m')P.t=src.t.map(x=>({...x,id:uid()}));if(mode!=='t')P.m={...src.m}})}
 function bDaySheet(d){
-  const P=bPlan(d),lg=B().logs[d]||{},iw=bIdeal(d,'w'),ifat=bIdeal(d,'f');
+  const P=bPlan(d),lg=B().logs[d]||{},iw=bIdeal(d,'w'),ifat=bIdeal(d,'f'),tk=bTargetKcal(d);
   document.getElementById('sheet').innerHTML=`<h3>${fmtD(d)}${d===TODAY?' 今日':''}</h3>
   <form id="bdayForm" novalidate>
-    <div class="frow"><label class="f"><span>体重（kg）${iw?`　理想 ${n1(iw)}`:''}</span><input id="bd_w" type="number" step="0.1" inputmode="decimal" value="${esc(lg.w||'')}"></label>
-    <label class="f"><span>体脂肪率（%）${ifat?`　理想 ${n1(ifat)}`:''}</span><input id="bd_f" type="number" step="0.1" inputmode="decimal" value="${esc(lg.f||'')}"></label></div>
-    <div class="f"><span>トレーニング${B().over[d]?'（この日だけ変更済み）':''}</span>
-      ${P.t.length?P.t.map(x=>`<label class="bchk"><input type="checkbox" id="bd_t_${x.id}" ${lg.td&&lg.td[x.id]?'checked':''}><span>${esc(bItemText(x))}</span></label>`).join(''):'<div class="small muted">休養日</div>'}</div>
-    <div class="f"><span>食事${P.m.kcal?`（目安 ${esc(P.m.kcal)}kcal）`:''}</span>
-      ${BMEALS.map(([k,l])=>`<div class="bmeal"><label class="bchk"><input type="checkbox" id="bd_m_${k}" ${lg.md&&lg.md[k]?'checked':''}><span>${l}</span></label><input id="bd_a_${k}" value="${esc((lg.ma||{})[k]||'')}" placeholder="${esc(P.m[k]||'実際に食べたもの')}"></div>`).join('')}
-      <div class="small muted">チェック＝予定どおり食べた。違うものを食べたら右に書く。</div></div>
+    <div class="frow3"><label class="f"><span>体重（kg）${iw?`<br><small>理想 ${n1(iw)}</small>`:''}</span><input id="bd_w" type="number" step="0.1" inputmode="decimal" value="${esc(lg.w||'')}"></label>
+    <label class="f"><span>体脂肪率（%）${ifat?`<br><small>理想 ${n1(ifat)}</small>`:''}</span><input id="bd_f" type="number" step="0.1" inputmode="decimal" value="${esc(lg.f||'')}"></label>
+    <label class="f"><span>筋量（kg）${iw||ifat?'<br><small>&nbsp;</small>':''}</span><input id="bd_mm" type="number" step="0.1" inputmode="decimal" value="${esc(lg.mm||'')}"></label></div>
+    <div class="f"><span>トレーニング${B().over[d]?'（この日だけ変更済み）':''}　<small>${esc(bDaySummary(P.t))}</small></span>
+      ${P.t.length?P.t.map(x=>{const z=bZone(x.reps);return `<label class="bchk"><input type="checkbox" id="bd_t_${x.id}" ${lg.td&&lg.td[x.id]?'checked':''}><span>${esc(bItemText(x))}</span>${z?`<span class="pill" style="--c:${z[1]}">${z[0]}</span>`:''}</label>`}).join(''):'<div class="small muted">休養日</div>'}</div>
+    <div class="f"><span>食事${tk?`（目標 ${fmtN(tk)}kcal）`:''}</span>
+      ${BMEALS.map(([k,l])=>`<div class="bmeal"><label class="bchk"><input type="checkbox" id="bd_m_${k}" ${lg.md&&lg.md[k]?'checked':''}><span>${l}</span></label><input id="bd_a_${k}" value="${esc((lg.ma||{})[k]||'')}" placeholder="${esc(P.m[k]||'実際に食べたもの')}"><input id="bd_k_${k}" type="number" inputmode="numeric" value="${esc((lg.mk||{})[k]||'')}" placeholder="${esc(P.m[k+'k']||'kcal')}"></div>`).join('')}
+      <div class="small muted">チェック＝予定どおり食べた（予定のkcalで計算）。違うものを食べたら、内容とkcalを書く。</div></div>
     <label class="f"><span>メモ</span><textarea id="bd_memo" style="min-height:60px">${esc(lg.memo||'')}</textarea></label>
     <div class="sheet-actions"><button type="button" class="btn sub" data-act="bOverEdit" data-d="${d}">この日のメニューを変更</button><div class="r"><button type="button" class="btn sub" data-act="sheetClose">キャンセル</button><button type="submit" class="btn">保存</button></div></div>
   </form>`;
@@ -1267,13 +1374,16 @@ function bDaySheet(d){
 }
 function bSaveDay(d){
   const P=bPlan(d),v=id=>(document.getElementById(id)?.value||'').trim(),c=id=>!!document.getElementById(id)?.checked;
-  const lg={w:v('bd_w'),f:v('bd_f'),td:{},md:{},ma:{},memo:v('bd_memo')};
+  const lg={w:v('bd_w'),f:v('bd_f'),mm:v('bd_mm'),td:{},md:{},ma:{},mk:{},memo:v('bd_memo')};
   P.t.forEach(x=>{if(c('bd_t_'+x.id))lg.td[x.id]=true});
-  BMEALS.forEach(([k])=>{if(c('bd_m_'+k))lg.md[k]=true;const a=v('bd_a_'+k);if(a)lg.ma[k]=a});
+  BMEALS.forEach(([k])=>{if(c('bd_m_'+k))lg.md[k]=true;const a=v('bd_a_'+k);if(a)lg.ma[k]=a;const kc=v('bd_k_'+k);if(+kc)lg.mk[k]=kc});
   B().logs[d]=lg;
   const g=B().goal;if(!g.startW&&+lg.w){g.startW=lg.w;if(!g.startDate)g.startDate=d}
   closeSheet();commit('記録した');
 }
+
+if(!S.body)S.body=bodyDef();
+bMigrate();
 
 /* ===== AI ===== */
 const SYS='あなたは竹渕さん（呼び名：ぶっちー）の業務アシスタント。携帯キャリアの販売業務（家電量販店）を管理する課長。回答はカジュアルな日本語で短く、箇条書き中心。データに無いことは推測で埋めず「データからは分からない」と書く。';
@@ -1467,11 +1577,11 @@ const ACT={
   bMon:el=>{const [y,m]=ui.bm.month.split('-').map(Number);const d=new Date(y,m-1+(+el.dataset.d),1);ui.bm.month=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},
   bMon0:()=>{ui.bm.month=THIS_MONTH;render()},
   bDay:el=>bDaySheet(el.dataset.d),
-  bMetric:el=>{ui.bm.metric=el.dataset.k;render()},
+  bRange:el=>{ui.bm.range=el.dataset.k;render()},
   bReplan:el=>{const st=bStatus();if(!st||st.noLog)return;const g=B().goal;g.startDate=st.lw.date;g.startW=String(st.lw.v);
     const lf=bLatest('f');if(lf&&g.targetF)g.startF=String(lf.v);if(el.dataset.k==='extend'&&st.newDate)g.targetDate=st.newDate;commit('理想の道筋を引き直した')},
   bGoalSave:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();
-    const g={startDate:v('bg_sd'),targetDate:v('bg_td'),startW:v('bg_sw'),targetW:v('bg_tw'),startF:v('bg_sf'),targetF:v('bg_tf')};
+    const g={startDate:v('bg_sd'),targetDate:v('bg_td'),startW:v('bg_sw'),targetW:v('bg_tw'),startF:v('bg_sf'),targetF:v('bg_tf'),kcal:v('bg_kcal')};
     if(!g.startDate||!g.targetDate||!+g.startW||!+g.targetW){toast('スタート日・期限・体重を入れてね');return}
     if(g.targetDate<=g.startDate){toast('期限はスタート日より後にしてね');return}
     B().goal=g;commit('目標を保存した')},
@@ -1480,11 +1590,16 @@ const ACT={
     if(!sw||!tw||tw>=sw){toast('スタートと目標の体重を入れてね（目標は軽く）');return}
     document.getElementById('bg_td').value=addDays(sd,Math.ceil((sw-tw)/(sw*0.0075)*7));toast('おすすめの期限を入れた。よければ保存してね')},
   bWd:el=>{ui.bm.mwd=+el.dataset.k;render()},
-  bItemAdd:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();const kind=v('bi_kind');
-    const it={id:uid(),kind,name:v('bi_name')||(kind==='c'?'ランニング':''),part:kind==='c'?'':v('bi_part'),sets:v('bi_sets'),reps:v('bi_reps'),kg:v('bi_kg'),min:v('bi_min')};
-    if(!it.name){toast('種目を入れてね');return}if(kind==='c'&&!+it.min){toast('時間（分）を入れてね');return}
-    bEditTarget().t.push(it);if(kind==='s'&&!B().lib.some(x=>x.name===it.name))B().lib.push({name:it.name,part:it.part});commit('追加した')},
+  bPart:el=>{ui.bm.part=el.dataset.k;render()},
+  bAddEx:el=>{const name=el.dataset.k;const P=bEditTarget();
+    if(P.t.some(x=>x.name===name)){toast('もう入ってるよ（外すときは×）');return}
+    let prev=null;const all=[...Object.values(B().plan),...Object.values(B().over)];all.forEach(Q=>Q.t.forEach(x=>{if(x.name===name)prev=x}));
+    P.t.push({id:uid(),name,part:ui.bm.part,sets:prev?prev.sets:'3',reps:prev?prev.reps:'10',kg:prev?prev.kg:''});commit()},
   bItemDel:el=>{const P=bEditTarget();P.t=P.t.filter(x=>x.id!==el.dataset.id);commit()},
+  bLibAdd:()=>{const v=(document.getElementById('bl_new')?.value||'').trim();if(!v){toast('種目名を入れてね');return}
+    if(B().lib.some(x=>x.name===v)){toast('同じ名前の種目があるよ');return}B().lib.push({name:v,part:ui.bm.part});commit('種目を登録した')},
+  bLibEdit:()=>{ui.bm.libEdit=!ui.bm.libEdit;render()},
+  bLibDel:el=>{B().lib=B().lib.filter(x=>x.name!==el.dataset.k);commit('種目リストから消した（メニューに入っている分はそのまま）')},
   bCopy:el=>{bCopyTo([+el.dataset.k]);commit(WD[+el.dataset.k]+'曜日に'+bCpyLabel()+'をコピーした')},
   bCopyAll:()=>{bCopyTo([0,1,2,3,4,5,6].filter(w=>w!==ui.bm.mwd));commit('ほかの全曜日に'+bCpyLabel()+'をコピーした')},
   bCpyMode:el=>{ui.bm.cpy=el.dataset.k;render()},
@@ -1554,7 +1669,9 @@ document.addEventListener('click',e=>{
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
 document.addEventListener('change',e=>{
-  if(e.target.dataset&&e.target.dataset.change==='bMeal'){const P=bEditTarget();P.m[e.target.dataset.k]=e.target.value;save();return}
+  if(e.target.dataset&&e.target.dataset.change==='bMeal'){const P=bEditTarget();P.m[e.target.dataset.k]=e.target.value;save();const t=bPlanKcal(P);const el=document.getElementById('bmk');if(el)el.textContent=t?`合計 ${fmtN(t)}kcal`:'';return}
+  if(e.target.dataset&&e.target.dataset.change==='bItem'){const P=bEditTarget();const x=P.t.find(y=>y.id===e.target.dataset.id);if(!x)return;x[e.target.dataset.f]=e.target.value;save();
+    const v=document.getElementById('bvol');if(v)v.textContent=bDaySummary(P.t);const z=bZone(x.reps),pz=document.getElementById('bz_'+x.id);if(pz){pz.hidden=!z;if(z){pz.textContent=z[0];pz.style.setProperty('--c',z[1])}}return}
   if(e.target.dataset&&e.target.dataset.change==='alTime'){const p=ui.al.edit[+e.target.dataset.i];p[e.target.dataset.k]=e.target.value;const b=document.getElementById('albar');if(b)b.outerHTML=alBar();return}
   if(e.target.id==='f_preset'){const p=LPRESET.find(x=>x[0]===e.target.value);if(p&&p[0]){document.getElementById('f_name').value=p[2];document.getElementById('f_url').value=p[3]}return}
   const el=e.target.closest('[data-change]');if(!el)return;const t=el.dataset.change;
