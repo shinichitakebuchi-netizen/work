@@ -656,7 +656,7 @@ function aiPane(){
       <button class="btn sm sub" data-act="ai" data-q="miss">抜け漏れチェック</button>
     </div>
     <div class="ai-foot"><button class="link" data-act="toClaude">Claudeで続ける</button>${ui.chat.length?'<button class="link" style="color:var(--muted)" data-act="chatClear">会話をクリア</button>':''}</div>
-    ${groups.length||ui.aiBusy?`<div class="chat" id="chatBox">${ui.aiBusy&&groups.length&&groups[0].length===1?'':''}${groups.map((gr,i)=>`<div class="turn ${i>0?'old':''}">${gr.map(msgHtml).join('')}${i===0&&ui.aiBusy?'<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>':''}</div>`).join('')}</div>`
+    ${groups.length||ui.aiBusy?`<div class="chat" id="chatBox">${ui.aiBusy&&groups.length&&groups[0].length===1?'':''}${groups.map((gr,i)=>`<div class="turn ${i>0?'old':''}">${gr.map(msgHtml).join('')}${i===0&&ui.aiBusy?`<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span>${ui.aiNote?`<div class="small muted" style="margin-top:6px">${esc(ui.aiNote)}</div>`:''}</div>`:''}</div>`).join('')}</div>`
       :`<div class="ai-empty"><b>何でも相談してね</b>アプリに入っている予定・タスク・案件・実績・シフトを読んだうえで答えるよ。新しいやり取りが一番上に出る。${on?'':'<br>いまはAI未接続なので、上の3つのボタンだけルールで動く。設定からGeminiのAPIキーを入れると自由に質問できる。'}</div>`}
   </div>`;
 }
@@ -778,6 +778,7 @@ function vSet(){
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
     <label class="f"><span>APIキー</span><input id="s_key" type="password" autocomplete="off" value="${esc(S.settings.apiKey)}" placeholder="AIza…"></label>
     <label class="f"><span>モデル名</span><input id="s_model" value="${esc(S.settings.model)}"><span class="hint">無料で使えるモデルは時期で変わる。動かないときはAI Studioで最新の名前を確認してね。</span></label>
+    <label class="f"><span>混雑時の予備モデル（任意）</span><input id="s_model2" value="${esc(S.settings.model2||'')}" placeholder="例：AI Studioで無料の別モデル名"><span class="hint">メインのモデルが混雑して何回やり直してもダメなとき、自動でこちらに切り替える。AI Studioのモデル一覧で、無料で使える別のモデル名を入れてね。</span></label>
     <div class="notice"><span class="grow"><b>注意：</b>無料枠では送った内容がGoogleのAI改善に使われ、人が読む場合もある。お客様の氏名・電話番号・契約内容などは入れないこと。</span></div>
     <div><button class="btn" data-act="saveKey">保存</button></div></div>
   <div class="card setrow"><h2>出勤人数の目安</h2>
@@ -1421,15 +1422,29 @@ const PROMPTS={
   miss:'データを見て抜け漏れを指摘して（期限切れ、次回アクション未設定の案件、出勤人数が足りない日、更新日が過ぎた求人など）。'
 };
 function mdLite(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>')}
-async function callGemini(){
-  const m=(S.settings.model||'gemini-3.8-flash').trim();
-  const contents=ui.chat.filter(x=>x.src!=='エラー').slice(-20).map(x=>({role:x.role,parts:[{text:x.send||x.text}]}));
+async function geminiOnce(m,contents){
   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`,{
     method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.settings.apiKey},
     body:JSON.stringify({systemInstruction:{parts:[{text:SYS+'\n\n--- 現在のデータ ---\n'+contextText()}]},contents})});
   let j={};try{j=await res.json()}catch(e){}
-  if(!res.ok)throw new Error(j.error?.message||('HTTP '+res.status));
+  if(!res.ok){const e=new Error(j.error?.message||('HTTP '+res.status));e.status=res.status;e.busy=res.status===503||res.status===429||/high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED/i.test(e.message);throw e}
   return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('')||'（回答が空だった）';
+}
+/* 混雑（503など）のときは少し待って自動でやり直し。それでもダメなら予備モデルに切り替える */
+async function callGemini(){
+  const main=(S.settings.model||'gemini-3.8-flash').trim(),alt=(S.settings.model2||'').trim();
+  const contents=ui.chat.filter(x=>x.src!=='エラー').slice(-20).map(x=>({role:x.role,parts:[{text:x.send||x.text}]}));
+  const plan=[[main,0],[main,2000],[main,5000]];if(alt&&alt!==main)plan.push([alt,0],[alt,3000]);
+  let last;
+  for(const [m,wait] of plan){
+    if(wait){ui.aiNote=`混雑中…${Math.round(wait/1000)}秒後にもう一度試すね`;renderAI();await new Promise(r=>setTimeout(r,wait))}
+    else if(m!==main){ui.aiNote=`混雑中…予備のモデル（${m}）で試すね`;renderAI()}
+    try{const t=await geminiOnce(m,contents);ui.aiNote='';return m===main?t:t+`\n\n（混雑のため予備モデル ${m} で回答）`}
+    catch(e){last=e;if(!e.busy)break}
+  }
+  ui.aiNote='';
+  if(last&&last.busy)throw new Error('Geminiが混雑していて、何回か試したけどつながらなかった。少し時間をおいてもう一度送ってね。'+(alt?'':'（設定で「混雑時の予備モデル」を入れておくと、自動で切り替えて試せる）'));
+  throw last;
 }
 function localAnswer(q){
   const L=[];
@@ -1663,7 +1678,7 @@ const ACT={
   editYear:el=>yearSheet(byId(S.yearplan,el.dataset.id)),
   yToggle:el=>{const y=byId(S.yearplan,el.dataset.id);if(y){y.done=!y.done;commit()}},
   ai:el=>runAI(el.dataset.q),
-  saveKey:()=>{S.settings.apiKey=document.getElementById('s_key').value.trim();S.settings.model=document.getElementById('s_model').value.trim()||'gemini-3.8-flash';commit('保存した')},
+  saveKey:()=>{S.settings.apiKey=document.getElementById('s_key').value.trim();S.settings.model=document.getElementById('s_model').value.trim()||'gemini-3.8-flash';S.settings.model2=(document.getElementById('s_model2')?.value||'').trim();commit('保存した')},
   saveMin:()=>{S.minStaff=Math.max(0,Number(document.getElementById('s_min').value)||0);commit('保存した')},
   export:()=>{try{const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`work-backup-${TODAY}.json`;document.body.appendChild(a);a.click();a.remove();toast('書き出した')}catch(e){toast('書き出せなかった。コピーを使ってね')}},
   copyJson:()=>{const s=JSON.stringify(S);if(navigator.clipboard)navigator.clipboard.writeText(s).then(()=>toast('コピーした'),()=>toast('コピーできなかった'));else toast('コピーできなかった')},
