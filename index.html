@@ -248,6 +248,20 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.typing i{animation:none}}
 
+.lbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:flex;align-items:center;gap:4px;overflow-x:auto;
+  margin:-6px 0 16px;padding:6px 8px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);
+  background:var(--glass-strong);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);scrollbar-width:none}
+.lbar::-webkit-scrollbar{display:none}
+.lt{flex:none;width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0;text-decoration:none;color:var(--fg);border-radius:10px}
+.lt:hover{background:var(--seg)}
+.lt .lic{width:34px;height:34px;border-radius:10px;font-size:11.5px}
+.lt .lic.add svg{width:16px;height:16px}
+.lt .lnm{font-size:10px;max-width:56px}
+.lt.edit .lic{animation:jig .3s ease-in-out infinite alternate}
+.lbar-edit{flex:none;margin-left:auto;min-width:34px;height:34px;padding:0 8px;border-radius:10px;display:grid;place-items:center;color:var(--muted);font-weight:700;font-size:13px;position:sticky;right:0;background:var(--glass-strong)}
+.lbar-edit svg{width:17px;height:17px}
+.lbar-edit.on{color:var(--on-accent);background:var(--accent)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .launch{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:12px 8px}
 .ltile{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--fg);padding:4px 0;border-radius:14px;min-width:0}
 .lic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--c);
@@ -339,6 +353,7 @@ const I={
   ark:'<path d="M4 21V5l8-2v18M12 21V9l8 3v9M2 21h20M7 8h2M7 12h2M7 16h2M15 14h2M15 17h2"/>',
   me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4.2-6.5 8-6.5s7 2.3 8 6.5"/>',
   set:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  edit:'<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 3 3"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   l:'<path d="m15 5-7 7 7 7"/>', r:'<path d="m9 5 7 7-7 7"/>',
@@ -499,7 +514,6 @@ function vHome(){
       <div class="card stat"><div class="lab">進行中の案件</div><div class="val">${openDeals.length}<small>件</small></div></div>
       <div class="card stat"><div class="lab">今月の実績 達成率</div><div class="val">${rate}<small>%</small></div><div class="small ${rate>=pace?'':'short'}" style="font-weight:700">${rate>=pace?'ペース通り':'ペースより遅れ'}（月の経過 ${pace}%）</div></div>
     </div>
-    ${launcherCard()}
     <div class="card">
       <div class="week">
         <button class="navarrow" data-act="wk" data-d="-7" aria-label="前の週">${ic('l')}</button>
@@ -539,16 +553,15 @@ function aiPane(){
       :`<div class="ai-empty"><b>何でも相談してね</b>アプリに入っている予定・タスク・案件・実績・シフトを読んだうえで答えるよ。新しいやり取りが一番上に出る。${on?'':'<br>いまはAI未接続なので、上の3つのボタンだけルールで動く。設定からGeminiのAPIキーを入れると自由に質問できる。'}</div>`}
   </div>`;
 }
-function launcherCard(){
+function launcherBar(){
   const L=S.launcher||[];
-  return `<div class="card"><div class="card-h"><h2>アプリ</h2><button class="link" data-act="lEdit">${ui.lEdit?'完了':'編集'}</button></div>
-    <div class="launch">${L.map(a=>{
+  return `<div class="lbar" role="toolbar" aria-label="よく使うアプリ">${L.map(a=>{
       const inner=`<span class="lic" style="--c:${a.color}">${esc([...a.name].slice(0,2).join(''))}</span><span class="lnm">${esc(a.name)}</span>`;
-      if(ui.lEdit)return `<button class="ltile edit" data-act="editLaunch" data-id="${a.id}">${inner}</button>`;
+      if(ui.lEdit)return `<button class="lt edit" data-act="editLaunch" data-id="${a.id}" title="${esc(a.name)}を編集">${inner}</button>`;
       const web=/^https?:/i.test(a.url);
-      return `<a class="ltile" href="${esc(a.url)}" ${web?'target="_blank" rel="noopener"':''}>${inner}</a>`}).join('')}
-    ${ui.lEdit?`<button class="ltile" data-act="addLaunch"><span class="lic add">${ic('plus')}</span><span class="lnm">追加</span></button>`:''}</div>
-    ${ui.lEdit?'<div class="small muted" style="margin-top:8px">タイルをタップして編集・削除。</div>':''}</div>`;
+      return `<a class="lt" href="${esc(a.url)}" title="${esc(a.name)}" ${web?'target="_blank" rel="noopener"':''}>${inner}</a>`}).join('')}
+    ${ui.lEdit?`<button class="lt" data-act="addLaunch" title="アプリを追加"><span class="lic add">${ic('plus')}</span><span class="lnm">追加</span></button>`:''}
+    <button class="lbar-edit ${ui.lEdit?'on':''}" data-act="lEdit" aria-label="${ui.lEdit?'編集を終える':'アプリを編集'}">${ui.lEdit?'完了':ic('edit')}</button></div>`;
 }
 
 /* ===== 現場 ===== */
@@ -817,7 +830,7 @@ function toClaude(){
 /* ===== 描画とイベント ===== */
 const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,set:vSet};
 function render(){
-  document.getElementById('main').innerHTML=VIEWS[ui.view]();
+  document.getElementById('main').innerHTML=launcherBar()+VIEWS[ui.view]();
   document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand" style="color:var(--accent)">${esc(appName())}</div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
     NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${AREAS[k]?esc(AREAS[k].name):l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
   document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${AREAS[k]?esc(AREAS[k].name):l}</span></button>`).join('');
