@@ -263,6 +263,7 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 .lbar-edit.on{color:var(--on-accent);background:var(--accent)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .sheetwrap{max-height:70vh;overflow:auto}
+.sheetwrap[data-fit]{max-height:none}
 table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums}
 .grid th,.grid td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 10px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .grid thead th{position:sticky;top:0;z-index:2;background:var(--glass-strong);color:var(--muted);font-weight:700;font-size:11.5px}
@@ -271,7 +272,10 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .grid td{cursor:pointer}.grid td:hover{background:var(--seg)}
 .grid td.fx{color:var(--muted);font-style:italic;cursor:default}
 .embed{padding:0;overflow:hidden}
-.embed iframe{display:block;width:100%;height:calc(100vh - 260px);min-height:480px;border:0;background:#fff}
+.embed iframe{display:block;width:100%;height:60vh;min-height:300px;border:0;background:#fff}
+html,body{overscroll-behavior:none}
+main.fit{padding-bottom:12px}
+@media (max-width:859px){main.fit{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}}
 .launch{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:12px 8px}
 .ltile{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--fg);padding:4px 0;border-radius:14px;min-width:0}
 .lic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--c);
@@ -856,7 +860,7 @@ function sheetView(){
   if(!v.length)return head+`<div class="card"><div class="empty">${ui.sh.busy?'読み込み中…':'このシートは空だよ'}</div></div>`;
   const cols=Math.max(...v.map(r=>r.length));
   return head+`<div class="card" style="padding:10px"><div class="small muted" style="margin:0 4px 8px">${esc(ui.sh.title||'')}／${esc(ui.sh.name)}　セルをタップすると編集できる（数式のセルは保護）${ui.sh.more?`　※先頭${v.length}行だけ表示中（残り${ui.sh.more}行はスプシで確認）`:''}</div>
-    <div class="tablewrap sheetwrap"><table class="grid"><thead><tr><th></th>${[...Array(cols)].map((_,i)=>`<th>${colName(i)}</th>`).join('')}</tr></thead><tbody>
+    <div class="tablewrap sheetwrap" data-fit><table class="grid"><thead><tr><th></th>${[...Array(cols)].map((_,i)=>`<th>${colName(i)}</th>`).join('')}</tr></thead><tbody>
     ${v.map((r,ri)=>`<tr><th>${ri+1}</th>${[...Array(cols)].map((_,ci)=>{const f=(ui.sh.formulas[ri]||[])[ci];return `<td class="${f?'fx':''}" data-act="cell" data-r="${ri}" data-c="${ci}">${esc(r[ci]??'')}</td>`}).join('')}</tr>`).join('')}
     </tbody></table></div></div>`;
 }
@@ -878,8 +882,7 @@ function embedView(){
   const cur=E.find(x=>x.id===ui.emb)||E[0];
   return `<div class="toolbar"><div class="chips">${E.map(x=>`<button class="chip ${cur&&x.id===cur.id?'on':''}" data-act="embPick" data-k="${x.id}">${esc(x.name)}</button>`).join('')}</div>
     <div style="display:flex;gap:8px">${cur?`<a class="btn sm sub" href="${esc(cur.url)}" target="_blank" rel="noopener">別タブで開く</a><button class="btn sm sub" data-act="embEdit" data-k="${cur.id}">編集</button>`:''}<button class="btn sm sub" data-act="embBulk">勤怠アプリを一括登録</button><button class="btn sm" data-act="embAdd">${ic('plus')}アプリを登録</button></div></div>
-    ${cur?`<div class="card embed"><iframe src="${esc(cur.url)}" title="${esc(cur.name)}" loading="lazy"></iframe></div>
-      <div class="small muted">真っ白やエラーのときは、GAS側に埋め込み許可の1行が必要（設定の「連携」に説明あり）。それでもダメなら「別タブで開く」を使ってね。</div>`
+    ${cur?`<div class="card embed"><iframe data-fit src="${esc(cur.url)}" title="${esc(cur.name)}"></iframe></div>`
       :`<div class="card"><div class="empty">勤怠管理やシフト管理など、GASで作ったアプリのURL（…/exec）を登録すると、ここに埋め込んで使えるよ。</div></div>`}`;
 }
 const KINTAI_PAGES=[['勤怠報告',''],['実績入力','jisseki'],['公休確認','koukyu'],['公休編集','koukyuedit'],['シフト一覧','shift'],['アラート設定','alert'],['店舗管理','store']];
@@ -966,11 +969,11 @@ async function runAI(q){
   if(q==='free'&&!draft){toast('質問を入力してね');return}
   ui.chat.push({role:'user',text:q==='free'?draft:QLABEL[q],send:q==='free'?draft:PROMPTS[q]});
   if(q==='free')ui.aiDraft='';
-  if(!S.settings.apiKey){ui.chat.push({role:'model',text:localAnswer(q),src:'AI未接続：アプリ内のルールで作成'});render();scrollChat();return}
-  ui.aiBusy=true;render();scrollChat();
+  if(!S.settings.apiKey){ui.chat.push({role:'model',text:localAnswer(q),src:'AI未接続：アプリ内のルールで作成'});renderAI();scrollChat();return}
+  ui.aiBusy=true;renderAI();scrollChat();
   try{ui.chat.push({role:'model',text:await callGemini(),src:'Gemini（内容は必ず確認してね）'})}
   catch(e){ui.chat.push({role:'model',text:'AIの呼び出しに失敗した：'+e.message+'\nキーやモデル名を設定画面で確認してね。'+(q!=='free'?'\n\n代わりにルールでの回答：\n'+localAnswer(q):''),src:'エラー'})}
-  ui.aiBusy=false;render();scrollChat();
+  ui.aiBusy=false;renderAI();scrollChat();
 }
 function toClaude(){
   const draft=(document.getElementById('aiq')?.value||'').trim();
@@ -990,8 +993,27 @@ function render(){
     NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${AREAS[k]?esc(AREAS[k].name):l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
   document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${AREAS[k]?esc(AREAS[k].name):l}</span></button>`).join('');
   document.getElementById('aipane').innerHTML=aiPane();
-  applyLayout();scrollChat();
+  applyLayout();scrollChat();fitPanels();
 }
+/* 埋め込み・表を画面の残りの高さにぴったり合わせて、ページ全体がスクロールしないようにする */
+function fitPanels(){
+  const main=document.getElementById('main');
+  const els=main.querySelectorAll('[data-fit]');
+  main.classList.toggle('fit',els.length>0);
+  if(!els.length)return;
+  window.scrollTo(0,0);
+  requestAnimationFrame(()=>{
+    const tab=document.getElementById('tabbar');
+    const bottom=MQ.matches?14:(tab?tab.getBoundingClientRect().height:0)+10;
+    els.forEach(el=>{
+      const card=el.closest('.card')||el;
+      const extra=card.getBoundingClientRect().bottom-el.getBoundingClientRect().bottom;
+      const h=window.innerHeight-el.getBoundingClientRect().top-extra-bottom;
+      el.style.height=Math.max(300,Math.floor(h))+'px';
+    });
+  });
+}
+function renderAI(){document.getElementById('aipane').innerHTML=aiPane();scrollChat()}
 function applyLayout(){
   const wide=MQ.matches,app=document.getElementById('app');
   if(wide){
@@ -1046,7 +1068,7 @@ const ACT={
   resetLayout:()=>{LAY={...LAY_DEF};saveLay();render();toast('レイアウトを元に戻した')},
   addLaunch:()=>launchSheet(),
   editLaunch:el=>launchSheet(byId(S.launcher,el.dataset.id)),
-  chatClear:()=>{ui.chat=[];render()},
+  chatClear:()=>{ui.chat=[];renderAI()},
   toClaude:()=>toClaude(),
   theme:el=>setTheme(el.dataset.k),
   themeCycle:()=>{const i=THEMES.findIndex(t=>t[0]===theme);setTheme(THEMES[(i+1)%THEMES.length][0])},
@@ -1130,7 +1152,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetCb)closeSheet(
 initSplit();
 if(S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),300);
 if(MQ.addEventListener)MQ.addEventListener('change',()=>{ui.aiMobile=false;render()});
-window.addEventListener('resize',()=>{if(MQ.matches)applyLayout()});
+window.addEventListener('resize',()=>{if(MQ.matches)applyLayout();fitPanels()});
 render();
 </script>
 </body>
