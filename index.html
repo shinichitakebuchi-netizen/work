@@ -25,6 +25,7 @@
   --nk:#d98a1f;
   --ark:#1b9585;
   --me:#6a5ed0;
+  --body:#d6456f;
   --danger:#d33a3a;
   --warn:#b8760d;
   --ok:#1d9a6a;
@@ -38,12 +39,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1829;--glass:rgba(22,36,62,.74);--glass-strong:rgba(33,51,85,.96);--seg:rgba(160,182,224,.12);
   --line:rgba(180,200,240,.12);--fg:#eef2f8;--muted:#a3aec4;--faint:#6b7891;--accent:#ff7a2e;--on-accent:#0e1829;
-  --genba:#5c95ff;--nk:#f2b24b;--ark:#3cc4b1;--me:#9a8fff;--danger:#ff6b6b;--warn:#f0b429;--ok:#3ccf91;
+  --genba:#5c95ff;--nk:#f2b24b;--ark:#3cc4b1;--me:#9a8fff;--body:#ff7aa0;--danger:#ff6b6b;--warn:#f0b429;--ok:#3ccf91;
   --blob-a:rgba(255,122,46,.13);--blob-b:rgba(92,149,255,.16);--blob-c:rgba(40,70,130,.35);--shadow:0 10px 30px rgba(0,0,0,.35);color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1829;--glass:rgba(22,36,62,.74);--glass-strong:rgba(33,51,85,.96);--seg:rgba(160,182,224,.12);
   --line:rgba(180,200,240,.12);--fg:#eef2f8;--muted:#a3aec4;--faint:#6b7891;--accent:#ff7a2e;--on-accent:#0e1829;
-  --genba:#5c95ff;--nk:#f2b24b;--ark:#3cc4b1;--me:#9a8fff;--danger:#ff6b6b;--warn:#f0b429;--ok:#3ccf91;
+  --genba:#5c95ff;--nk:#f2b24b;--ark:#3cc4b1;--me:#9a8fff;--body:#ff7aa0;--danger:#ff6b6b;--warn:#f0b429;--ok:#3ccf91;
   --blob-a:rgba(255,122,46,.13);--blob-b:rgba(92,149,255,.16);--blob-c:rgba(40,70,130,.35);--shadow:0 10px 30px rgba(0,0,0,.35);color-scheme:dark}
 
 html,body{height:100%}
@@ -443,7 +444,7 @@ const AREAS={
   ark:{name:'ARKZOO',full:'ARKZOO',c:'var(--ark)',tags:['Google','フォーム','マップ']},
   me:{name:'個人',full:'個人',c:'var(--me)',tags:['用事','予定']}
 };
-const AREA_DEF={genba:{name:'現場',full:'ベイシア電器 前橋モール店'},nk:{name:'NK',full:'ニュー・クーキー'},ark:{name:'ARKZOO',full:'法人立ち上げ・Web対応'},me:{name:'個人',full:'プライベートの予定'}};
+const AREA_DEF={genba:{name:'現場',full:'ベイシア電器 前橋モール店'},nk:{name:'NK',full:'ニュー・クーキー'},ark:{name:'ARKZOO',full:'法人立ち上げ・Web対応'},me:{name:'個人',full:'プライベートの予定'},body:{name:'ボディメイク',full:'目標までの道筋'}};
 const STAGES=['見込み','来店予約','商談中','成約','失注'];
 const STAGE_C={'見込み':'var(--muted)','来店予約':'var(--genba)','商談中':'var(--warn)','成約':'var(--ok)','失注':'var(--danger)'};
 const SHIFT_CYCLE=['','出','休','有'];
@@ -559,6 +560,12 @@ if(!S.gcal)S.gcal={at:0,events:[]};
 function appName(){return (S.names&&S.names.app)||'WORK'}
 function applyNames(){Object.keys(AREAS).forEach(k=>{const n=(S.names&&S.names[k])||{};AREAS[k].name=n.name||AREA_DEF[k].name;AREAS[k].full=n.full||AREA_DEF[k].full})}
 applyNames();
+/* メニューに出す名前・サブタイトル・色（ボディメイクも他の区分と同じ扱い） */
+function navInfo(k){
+  if(AREAS[k])return {name:AREAS[k].name,full:AREAS[k].full,c:AREAS[k].c};
+  if(k==='body'){const n=(S.names&&S.names.body)||{};return {name:n.name||AREA_DEF.body.name,full:n.full||AREA_DEF.body.full,c:'var(--body)'}}
+  return null;
+}
 if(!S.settings.model||S.settings.model==='gemini-2.5-flash')S.settings.model='gemini-3.8-flash';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -1275,7 +1282,7 @@ function bodyHomeCard(){
 function vBody(){
   const t=ui.seg.body||'cal';
   let body=t==='trend'?bTrendView():t==='goal'?bGoalView():t==='menu'?bMenuView():bCalView();
-  return `${hdr('ボディメイク','目標までの道筋')}<div class="stack">${seg('body',[['cal','カレンダー'],['trend','推移'],['goal','目標'],['menu','メニュー']],t)}${body}</div>`;
+  return `${hdr(esc(navInfo('body').name),esc(navInfo('body').full))}<div class="stack">${seg('body',[['cal','カレンダー'],['trend','推移'],['goal','目標'],['menu','メニュー']],t)}${body}</div>`;
 }
 function bSummary(){
   const g=B().goal,st=bStatus();
@@ -1547,8 +1554,8 @@ const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,body:vBody,set:vSet}
 function render(){
   document.getElementById('main').innerHTML=launcherBar()+VIEWS[ui.view]();
   document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand" style="color:var(--accent)">${esc(appName())}</div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
-    NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${AREAS[k]?esc(AREAS[k].name):l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
-  document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${AREAS[k]?esc(AREAS[k].name):l}</span></button>`).join('');
+    NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${navInfo(k)?esc(navInfo(k).name):l}${navInfo(k)?`<span class="dot" style="--c:${navInfo(k).c}"></span>`:''}</button>`).join('');
+  document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${navInfo(k)?esc(navInfo(k).name):l}</span></button>`).join('');
   document.getElementById('aipane').innerHTML=aiPane();
   applyLayout();scrollChat();fitPanels();
 }
