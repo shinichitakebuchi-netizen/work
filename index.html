@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ぶっちー WORK</title>
+<title>WORK</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="WORK">
@@ -56,7 +56,7 @@ button{cursor:pointer;border:none;background:none}
 
 .app{display:grid;grid-template-columns:1fr;min-height:100%}
 .side{display:none}
-main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 130px;
+main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 100px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 @media (min-width:860px){
   .app{grid-template-columns:220px 6px minmax(0,1fr) 6px 380px}
@@ -88,7 +88,9 @@ main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 13
 .ai-in{display:flex;flex-direction:column;gap:10px;height:100%;padding:18px 16px}
 .ai-in .ai-head{margin:0}
 .ai-in .chat{flex:1;min-height:0;max-height:none;margin:0}
-.ai-empty{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;color:var(--muted);font-size:13.5px;padding:8px}
+.turn{display:flex;flex-direction:column;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.turn:last-child{border-bottom:none}
+.ai-empty{flex:1;justify-content:flex-start!important;display:flex;flex-direction:column;justify-content:center;gap:8px;color:var(--muted);font-size:13.5px;padding:8px}
 .ai-empty b{color:var(--fg);font-size:15px}
 .ai-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
 @media (min-width:860px){
@@ -260,6 +262,8 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 .msg.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:6px;white-space:pre-wrap}
 .msg.ai{align-self:flex-start;background:var(--glass-strong);border:1px solid var(--line);border-bottom-left-radius:6px}
 .msg .src{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.addbtn{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.addbtn svg{stroke-width:2.4}
 .fab{position:fixed;z-index:21;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;
   box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 45%,transparent);
   right:calc(max(16px,env(safe-area-inset-right,0px)) + 4px);bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}
@@ -298,7 +302,6 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
   <aside class="aipane" id="aipane" aria-label="AIチャット"></aside>
 </div>
 <nav class="tabbar" id="tabbar"></nav>
-<button class="fab" id="fab" data-act="add" aria-label="追加"></button>
 <div class="sheet-wrap" id="sheetWrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" hidden></div>
 
@@ -324,6 +327,7 @@ const AREAS={
   ark:{name:'ARKZOO',full:'ARKZOO',c:'var(--ark)',tags:['Google','フォーム','マップ']},
   me:{name:'個人',full:'個人',c:'var(--me)',tags:['用事','予定']}
 };
+const AREA_DEF={genba:{name:'現場',full:'ベイシア電器 前橋モール店'},nk:{name:'NK',full:'ニュー・クーキー'},ark:{name:'ARKZOO',full:'法人立ち上げ・Web対応'},me:{name:'個人',full:'プライベートの予定'}};
 const STAGES=['見込み','来店予約','商談中','成約','失注'];
 const STAGE_C={'見込み':'var(--muted)','来店予約':'var(--genba)','商談中':'var(--warn)','成約':'var(--ok)','失注':'var(--danger)'};
 const SHIFT_CYCLE=['','出','休','有'];
@@ -428,6 +432,10 @@ function defaultLaunch(){return [
   {id:uid(),name:'Instagram',url:'https://www.instagram.com/',color:'var(--me)'}
 ]}
 if(!S.launcher){S.launcher=defaultLaunch()}
+if(!S.names)S.names={app:'WORK'};
+function appName(){return (S.names&&S.names.app)||'WORK'}
+function applyNames(){Object.keys(AREAS).forEach(k=>{const n=(S.names&&S.names[k])||{};AREAS[k].name=n.name||AREA_DEF[k].name;AREAS[k].full=n.full||AREA_DEF[k].full})}
+applyNames();
 if(!S.settings.model||S.settings.model==='gemini-2.5-flash')S.settings.model='gemini-3.8-flash';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -440,7 +448,7 @@ let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY)
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
-function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}<button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
+function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}${ui.view!=='set'?`<button class="iconbtn addbtn" data-act="add" aria-label="追加">${ic('plus')}</button>`:''}<button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
 function seg(g,opts,cur){return `<div class="seg" role="tablist">${opts.map(([k,l])=>`<button class="${k===cur?'on':''}" data-act="seg" data-g="${g}" data-k="${k}">${l}</button>`).join('')}</div>`}
 function sortItems(a){return [...a].sort((x,y)=>{
   const rx=x.kind==='event'?(x.time?0:1):2,ry=y.kind==='event'?(y.time?0:1):2;
@@ -454,7 +462,7 @@ function rowItem(i,o={}){
   return `<div class="row" data-act="edit" data-id="${i.id}">
     <span class="stripe" style="--c:${A.c}"></span>${lead}
     <div class="rbody"><div class="rtitle ${i.done?'struck':''}">${esc(i.title)}</div>
-    <div class="rmeta"><span class="pill" style="--c:${A.c}">${A.name}</span>${i.tag?`<span>${esc(i.tag)}</span>`:''}${o.date&&i.date?`<span>${fmtD(i.date)}${i.kind==='event'&&i.time?' '+esc(i.time):''}</span>`:''}${overdue?'<span class="pill danger">期限切れ</span>':''}</div></div></div>`;
+    <div class="rmeta"><span class="pill" style="--c:${A.c}">${esc(A.name)}</span>${i.tag?`<span>${esc(i.tag)}</span>`:''}${o.date&&i.date?`<span>${fmtD(i.date)}${i.kind==='event'&&i.time?' '+esc(i.time):''}</span>`:''}${overdue?'<span class="pill danger">期限切れ</span>':''}</div></div></div>`;
 }
 function grouped(list,empty){
   if(!list.length)return `<div class="empty">${empty}</div>`;
@@ -508,22 +516,27 @@ function vHome(){
     </div>
   </div>`;
 }
+function chatGroups(){
+  const g=[];ui.chat.forEach(m=>{if(m.role==='user'||!g.length)g.push([m]);else g[g.length-1].push(m)});
+  return g.reverse();
+}
+function msgHtml(m){return m.role==='user'?`<div class="msg me">${esc(m.text)}</div>`
+  :`<div class="msg ai">${m.src?`<div class="src">${esc(m.src)}</div>`:''}${mdLite(m.text)}</div>`}
 function aiPane(){
   const on=!!S.settings.apiKey;
+  const groups=chatGroups();
   return `<div class="ai-in">
     <div class="ai-head"><span class="spark">✦</span><h2>AIチャット</h2><span class="pill ${on?'ok':''}">${on?'Gemini':'未接続'}</span>
       <button class="paneclose" style="margin-left:auto" data-act="rClose" aria-label="AIチャットを閉じる">${ic('x')}</button></div>
-    ${ui.chat.length||ui.aiBusy?`<div class="chat" id="chatBox">${ui.chat.map(m=>m.role==='user'
-      ?`<div class="msg me">${esc(m.text)}</div>`
-      :`<div class="msg ai">${m.src?`<div class="src">${esc(m.src)}</div>`:''}${mdLite(m.text)}</div>`).join('')}${ui.aiBusy?'<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>':''}</div>`
-      :`<div class="ai-empty"><b>何でも相談してね</b>アプリに入っている予定・タスク・案件・実績・シフトを読んだうえで答えるよ。${on?'':'<br>いまはAI未接続なので、下の3つのボタンだけルールで動く。設定からGeminiのAPIキーを入れると自由に質問できる。'}</div>`}
+    <div class="ai-input"><textarea id="aiq" rows="2" placeholder="質問を入力（Enterで送信／Shift+Enterで改行）">${esc(ui.aiDraft)}</textarea><button class="btn" data-act="ai" data-q="free">送信</button></div>
     <div class="ai-quick" style="margin:0">
       <button class="btn sm sub" data-act="ai" data-q="plan">今日の段取り</button>
       <button class="btn sm sub" data-act="ai" data-q="week">今週の優先順位</button>
       <button class="btn sm sub" data-act="ai" data-q="miss">抜け漏れチェック</button>
     </div>
-    <div class="ai-input"><textarea id="aiq" rows="2" placeholder="例：明日の研修の流れを30分で組んで">${esc(ui.aiDraft)}</textarea><button class="btn" data-act="ai" data-q="free">送信</button></div>
     <div class="ai-foot"><button class="link" data-act="toClaude">Claudeで続ける</button>${ui.chat.length?'<button class="link" style="color:var(--muted)" data-act="chatClear">会話をクリア</button>':''}</div>
+    ${groups.length||ui.aiBusy?`<div class="chat" id="chatBox">${ui.aiBusy&&groups.length&&groups[0].length===1?'':''}${groups.map((gr,i)=>`<div class="turn ${i>0?'old':''}">${gr.map(msgHtml).join('')}${i===0&&ui.aiBusy?'<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>':''}</div>`).join('')}</div>`
+      :`<div class="ai-empty"><b>何でも相談してね</b>アプリに入っている予定・タスク・案件・実績・シフトを読んだうえで答えるよ。新しいやり取りが一番上に出る。${on?'':'<br>いまはAI未接続なので、上の3つのボタンだけルールで動く。設定からGeminiのAPIキーを入れると自由に質問できる。'}</div>`}
   </div>`;
 }
 function launcherCard(){
@@ -569,7 +582,7 @@ function vGenba(){
         <div class="bar" style="--c:${c}"><i style="width:${Math.min(pr,100)}%"></i></div></div>`}).join(''):'<div class="empty">商材を追加して目標を入れてね</div>'}
     </div>`;
   }
-  return `${hdr('現場',AREAS.genba.full)}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定'],['res','実績']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.genba.name),esc(AREAS.genba.full))}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定'],['res','実績']],s)}${body}</div>`;
 }
 
 /* ===== NK ===== */
@@ -598,18 +611,18 @@ function vNk(){
     <div class="months">${[...Array(12)].map((_,k)=>{const mo=mAdd(k);const its=S.yearplan.filter(y=>y.month===mo);
       return `<div class="card mon ${k===0?'now':''}"><h3>${mo}月${k===0?'<span class="pill accent">今月</span>':''}</h3>${its.length?its.map(y=>`<div class="row" data-act="editYear" data-id="${y.id}"><button class="chk ${y.done?'on':''}" style="margin:0" data-act="yToggle" data-id="${y.id}" aria-label="完了">${ic('check')}</button><div class="rbody"><div class="rtitle ${y.done?'struck':''}">${esc(y.title)}</div></div></div>`).join(''):'<div class="small" style="color:var(--faint);padding:6px 0">—</div>'}</div>`}).join('')}</div>`;
   }else body=areaList('nk');
-  return `${hdr('ニュー・クーキー','NK 業務')}<div class="stack">${seg('nk',[['shift','シフト'],['ads','広告'],['year','年間'],['todo','予定']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['ads','広告'],['year','年間'],['todo','予定']],s)}${body}</div>`;
 }
 
 /* ===== ARKZOO / 個人 ===== */
 function vArk(){
   const t=S.items.filter(i=>i.area==='ark'&&i.kind==='task');const done=t.filter(i=>i.done).length;const p=t.length?Math.round(done/t.length*100):0;
-  return `${hdr('ARKZOO','法人立ち上げ・Web対応')}<div class="stack">
+  return `${hdr(esc(AREAS.ark.name),esc(AREAS.ark.full))}<div class="stack">
     <div class="card" style="display:flex;align-items:center;gap:16px"><div class="ring" style="--p:${p};--c:var(--ark)"><span>${p}%</span></div>
       <div><h2>立ち上げタスク</h2><div class="muted small">${done} / ${t.length} 完了。残りは期限の近い順に下に並んでる。</div></div></div>
     ${areaList('ark')}</div>`;
 }
-function vMe(){return `${hdr('個人','プライベートの予定')}<div class="stack">${areaList('me')}</div>`}
+function vMe(){return `${hdr(esc(AREAS.me.name),esc(AREAS.me.full))}<div class="stack">${areaList('me')}</div>`}
 
 /* ===== 設定 ===== */
 function vSet(){
@@ -619,6 +632,11 @@ function vSet(){
     <div>${THEMES.map(([k,l])=>`<button class="chip ${theme===k?'on':''}" style="margin-right:6px" data-act="theme" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="small muted">iPadの横画面では「メニュー｜メイン｜AIチャット」の3列。仕切りをドラッグで幅を変更、ダブルタップで元の幅。各列は右上のボタンで閉じられる。</div>
     <div><button class="btn sm sub" data-act="resetLayout">レイアウトを元に戻す</button></div></div>
+  <div class="card setrow"><h2>名称</h2>
+    <div class="small muted">メニューの名前と、各画面の上に出るサブタイトルを変えられる。空欄にすると元の名前に戻る。</div>
+    <label class="f"><span>アプリ名</span><input id="n_app" value="${esc(S.names.app||'')}" placeholder="WORK"></label>
+    ${Object.keys(AREA_DEF).map(k=>`<div class="frow"><label class="f"><span>メニュー名（${esc(AREA_DEF[k].name)}）</span><input id="n_${k}_name" value="${esc((S.names[k]||{}).name||'')}" placeholder="${esc(AREA_DEF[k].name)}"></label><label class="f"><span>サブタイトル</span><input id="n_${k}_full" value="${esc((S.names[k]||{}).full||'')}" placeholder="${esc(AREA_DEF[k].full)}"></label></div>`).join('')}
+    <div><button class="btn" data-act="saveNames">保存</button></div></div>
   <div class="card setrow"><h2>AI連携（Gemini・無料枠）</h2>
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
     <label class="f"><span>APIキー</span><input id="s_key" type="password" autocomplete="off" value="${esc(S.settings.apiKey)}" placeholder="AIza…"></label>
@@ -773,7 +791,7 @@ function localAnswer(q){
   return L.join('\n');
 }
 const QLABEL={plan:'今日の段取りを組んで',week:'今週の優先順位は？',miss:'抜け漏れをチェックして'};
-function scrollChat(){const b=document.getElementById('chatBox');if(b)b.scrollTop=b.scrollHeight}
+function scrollChat(){const b=document.getElementById('chatBox');if(b)b.scrollTop=0}
 async function runAI(q){
   if(ui.aiBusy)return;
   const draft=(document.getElementById('aiq')?.value||'').trim();
@@ -790,7 +808,7 @@ function toClaude(){
   const draft=(document.getElementById('aiq')?.value||'').trim();
   const lastQ=[...ui.chat].reverse().find(m=>m.role==='user');
   const q=draft||(lastQ?lastQ.text:'');
-  const text=`【ぶっちー WORKのデータ】\n${contextText()}\n\n【相談したいこと】\n${q||'（ここに書いてね）'}`;
+  const text=`【${appName()}のデータ】\n${contextText()}\n\n【相談したいこと】\n${q||'（ここに書いてね）'}`;
   if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast('データをコピーした。Claudeに貼り付けてね'),()=>{});
   const url=text.length<6000?'https://claude.ai/new?q='+encodeURIComponent(text):'https://claude.ai/new';
   window.open(url,'_blank','noopener');
@@ -800,11 +818,9 @@ function toClaude(){
 const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,set:vSet};
 function render(){
   document.getElementById('main').innerHTML=VIEWS[ui.view]();
-  document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand">ぶっちー <span style="color:var(--accent)">WORK</span><small>NEW KOOKY / ARKZOO / 個人</small></div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
-    NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
-  document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${l}</span></button>`).join('');
-  document.getElementById('fab').innerHTML=ic('plus');
-  document.getElementById('fab').hidden=ui.view==='set';
+  document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand" style="color:var(--accent)">${esc(appName())}</div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
+    NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${AREAS[k]?esc(AREAS[k].name):l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
+  document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${AREAS[k]?esc(AREAS[k].name):l}</span></button>`).join('');
   document.getElementById('aipane').innerHTML=aiPane();
   applyLayout();scrollChat();
 }
@@ -819,7 +835,6 @@ function applyLayout(){
   document.getElementById('splitL').hidden=!wide||!LAY.lOpen;
   document.getElementById('splitR').hidden=!wide||!LAY.rOpen;
   document.getElementById('aipane').hidden=wide?!LAY.rOpen:!ui.aiMobile;
-  document.getElementById('fab').style.right=wide&&LAY.rOpen?(LAY.rw+30)+'px':'';
 }
 function initSplit(){
   document.querySelectorAll('.split').forEach(sp=>{
@@ -857,6 +872,9 @@ const ACT={
   lOpen:()=>{LAY.lOpen=true;saveLay();render()},
   rClose:()=>{if(MQ.matches){LAY.rOpen=false;saveLay()}else ui.aiMobile=false;render()},
   rOpen:()=>{if(MQ.matches){LAY.rOpen=true;saveLay()}else ui.aiMobile=true;render();setTimeout(()=>document.getElementById('aiq')?.focus(),60)},
+  saveNames:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();
+    S.names={app:v('n_app')};Object.keys(AREA_DEF).forEach(k=>{S.names[k]={name:v('n_'+k+'_name'),full:v('n_'+k+'_full')}});
+    applyNames();commit('名称を保存した')},
   resetLayout:()=>{LAY={...LAY_DEF};saveLay();render();toast('レイアウトを元に戻した')},
   addLaunch:()=>launchSheet(),
   editLaunch:el=>launchSheet(byId(S.launcher,el.dataset.id)),
@@ -895,8 +913,8 @@ const ACT={
   saveMin:()=>{S.minStaff=Math.max(0,Number(document.getElementById('s_min').value)||0);commit('保存した')},
   export:()=>{try{const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`work-backup-${TODAY}.json`;document.body.appendChild(a);a.click();a.remove();toast('書き出した')}catch(e){toast('書き出せなかった。コピーを使ってね')}},
   copyJson:()=>{const s=JSON.stringify(S);if(navigator.clipboard)navigator.clipboard.writeText(s).then(()=>toast('コピーした'),()=>toast('コピーできなかった'));else toast('コピーできなかった')},
-  blank:el=>armConfirm(el,'もう一度押すと全部空になる',()=>{S=blank(S.settings);ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')}),
-  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings;S=sample();S.settings=k;commit('サンプルに戻した')}),
+  blank:el=>{const keepNames=S.names;armConfirm(el,'もう一度押すと全部空になる',()=>{S=blank(S.settings);S.names=keepNames;ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')})},
+  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings,nm=S.names,ln=S.launcher;S=sample();S.settings=k;S.names=nm;S.launcher=ln;commit('サンプルに戻した')}),
   sheetClose:()=>closeSheet(),
   sheetDel:el=>{if(!sheetCb)return;if(!sheetCb.delArmed){sheetCb.delArmed=true;el.textContent='本当に削除';return}sheetCb.onDelete();closeSheet();commit('削除した')}
 };
@@ -913,9 +931,14 @@ document.addEventListener('change',e=>{
   if(t==='stage'){const d=byId(S.deals,el.dataset.id);if(d){d.stage=el.value;commit(el.value==='成約'?'成約おめでとう！':'')}}
   if(t==='adStatus'){const a=byId(S.ads,el.dataset.id);if(a){a.status=el.value;commit()}}
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
-  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
+  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
 document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value});
+document.addEventListener('keydown',e=>{
+  if(e.target.id!=='aiq'||e.key!=='Enter'||e.shiftKey)return;
+  if(e.isComposing||e.keyCode===229)return;
+  e.preventDefault();runAI('free');
+});
 document.addEventListener('submit',e=>{
   if(e.target.id!=='sheetForm')return;e.preventDefault();if(!sheetCb)return;
   const err=sheetCb.onSave(readSheet());if(err){toast(err);return}
