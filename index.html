@@ -106,7 +106,7 @@ main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 10
 }
 .side .spacer{flex:1}
 
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,1fr);
   padding-top:6px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 6px);
   padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));
   background:var(--glass);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-top:1px solid var(--line)}
@@ -280,6 +280,37 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .grid.ks tbody th.sun{color:var(--danger)}.grid.ks tbody th.sat{color:var(--genba)}
 .grid.ks tr.today th,.grid.ks tr.today td{box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
 .grid.ks td.cnt{text-align:center;font-weight:800}
+.bsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.bsum .lab{font-size:12px;font-weight:700;color:var(--muted)}
+.bsum .big{font-size:28px}.bsum .big small{font-size:13px;color:var(--muted);margin-left:2px}
+.bcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.bwh{text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);padding:2px 0}
+.bday{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:72px;padding:6px 7px;border-radius:12px;background:var(--seg);text-align:left;min-width:0}
+.bday.out{opacity:.4}.bday.today{outline:2px solid var(--accent);outline-offset:-2px}
+.bday.ovr{box-shadow:inset 0 0 0 1px var(--accent)}
+.bday .bn{font-family:var(--num);font-weight:800;font-size:14px}
+.bday .bw{font-family:var(--num);font-size:12px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums}
+.bdots{display:flex;gap:4px;align-items:center;margin-top:auto}
+.bdots em{font-style:normal;font-size:10.5px;color:var(--faint);font-weight:700}
+.bdots i,.blegend i{display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--faint)}
+.bdots i.m,.blegend i.m{border-radius:50%}
+i.ok{background:var(--ok)!important}i.part{background:var(--warn)!important}i.miss{background:var(--danger)!important}i.plan{background:transparent!important;border:1.5px solid var(--faint)}
+.blegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;align-items:center}
+.blegend span{display:inline-flex;align-items:center;gap:5px}
+.bchart{width:100%;height:auto;display:block}
+.bchart .cg{stroke:var(--line)}.bchart .ct{fill:var(--muted);font-size:11px}
+.bchart .ci{stroke:var(--genba);stroke-width:2;stroke-dasharray:6 5}
+.bchart .ca{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round}
+.bchart .cd{fill:var(--accent)}.bchart .ctd{stroke:var(--faint);stroke-dasharray:2 4}
+.lgi{display:inline-block;width:18px;border-top:2px dashed var(--genba)}.lga{display:inline-block;width:18px;border-top:2.5px solid var(--accent)}
+.badd{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0 10px;align-items:end}
+.badd .f{margin-bottom:8px}
+.bchk{display:flex;align-items:center;gap:10px;padding:8px 2px;font-weight:600}
+.bchk input{width:22px;height:22px;accent-color:var(--ok);flex:none}
+.bmeal{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;align-items:center}
+.bmeal .bchk{padding:4px 0}
+.bmeal input:not([type]){width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px}
+.grid.al td{padding:4px 6px}.grid.al input{font-size:15px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .grid.ks td.kc.on{background:color-mix(in srgb,var(--genba) 16%,transparent);color:var(--genba)}
 .tlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
 .trow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--seg);min-width:0}
@@ -382,6 +413,7 @@ const I={
   me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4.2-6.5 8-6.5s7 2.3 8 6.5"/>',
   set:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
   edit:'<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 3 3"/>',
+  body:'<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   l:'<path d="m15 5-7 7 7 7"/>', r:'<path d="m9 5 7 7-7 7"/>',
@@ -397,7 +429,7 @@ let theme='auto';try{theme=localStorage.getItem(KEY+'_theme')||'auto'}catch(e){}
 function applyTheme(){if(theme==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',theme)}
 applyTheme();
 const ic=k=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
-const NAV=[['home','ホーム'],['genba','現場'],['nk','NK'],['ark','ARKZOO'],['me','個人'],['set','設定']];
+const NAV=[['home','ホーム'],['genba','現場'],['nk','NK'],['ark','ARKZOO'],['me','個人'],['body','ボディメイク'],['set','設定']];
 
 /* ===== データ ===== */
 function arkTasks(){return [
@@ -480,6 +512,7 @@ if(!S.names)S.names={app:'WORK'};
 if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};
 if(!S.conn.kintai)S.conn.kintai={url:'',token:''};
 if(!S.embeds)S.embeds=[];
+if(!S.body)S.body=bodyDef();
 if(!S.gcal)S.gcal={at:0,events:[]};
 function appName(){return (S.names&&S.names.app)||'WORK'}
 function applyNames(){Object.keys(AREAS).forEach(k=>{const n=(S.names&&S.names[k])||{};AREAS[k].name=n.name||AREA_DEF[k].name;AREAS[k].full=n.full||AREA_DEF[k].full})}
@@ -492,7 +525,7 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},td:{data:null,busy:false,err:'',at:0}};
+let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',bm:{tab:'cal',month:THIS_MONTH,mwd:1,odate:'',metric:'w'},ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},al:{data:null,edit:null,busy:false,err:'',at:0},td:{data:null,busy:false,err:'',at:0}};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
@@ -536,7 +569,6 @@ function vHome(){
   const todayEv=allItems().filter(i=>i.date===TODAY&&i.kind==='event');
   const overdue=allItems().filter(i=>i.kind==='task'&&!i.done&&i.date&&i.date<TODAY);
   const openDeals=S.deals.filter(x=>!['成約','失注'].includes(x.stage));
-  const {rate}=achRate();const pace=monthPace();
   const days=[...Array(7)].map((_,k)=>addDays(ui.week,k));
   const dayItems=allItems().filter(i=>i.date===ui.sel);
   const todo=allItems().filter(i=>i.kind==='task'&&!i.done&&(!i.date||i.date<=addDays(TODAY,7))).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
@@ -547,7 +579,7 @@ function vHome(){
       <div class="card stat"><div class="lab">今日の予定</div><div class="val">${todayEv.length}<small>件</small></div></div>
       <div class="card stat ${overdue.length?'alert':''}"><div class="lab">期限切れタスク</div><div class="val">${overdue.length}<small>件</small></div></div>
       <div class="card stat"><div class="lab">進行中の案件</div><div class="val">${openDeals.length}<small>件</small></div></div>
-      <div class="card stat"><div class="lab">今月の実績 達成率</div><div class="val">${rate}<small>%</small></div><div class="small ${rate>=pace?'':'short'}" style="font-weight:700">${rate>=pace?'ペース通り':'ペースより遅れ'}（月の経過 ${pace}%）</div></div>
+      ${bodyStat()}
     </div>
     ${todayCard()}
     <div class="card">
@@ -603,6 +635,7 @@ function launcherBar(){
 
 /* ===== 現場 ===== */
 function vGenba(){
+  if(!['deal','sched'].includes(ui.seg.genba))ui.seg.genba='deal';
   const s=ui.seg.genba;
   let body='';
   if(s==='deal'){
@@ -615,26 +648,10 @@ function vGenba(){
       <div class="deal-top"><b>${esc(x.name)}</b><select class="psel" style="--c:${STAGE_C[x.stage]}" data-change="stage" data-id="${x.id}" aria-label="ステージ">${STAGES.map(st=>`<option ${st===x.stage?'selected':''}>${st}</option>`).join('')}</select></div>
       <div class="muted">${esc(x.content)||'—'}</div>
       <div class="deal-foot"><span class="${late?'short':''}">次回：${x.next?fmtD(x.next):(['成約','失注'].includes(x.stage)?'—':'<b class="short">未設定</b>')}</span><button class="link" data-act="editDeal" data-id="${x.id}">編集</button></div></div>`}).join('')}</div>`:'<div class="card"><div class="empty">該当する案件はないよ</div></div>'}`;
-  }else if(s==='sheet'){
-    body=sheetView();
-  }else if(s==='sched'){
-    body=areaList('genba');
   }else{
-    const r=S.results;const {t,a,rate}=achRate();const pace=monthPace();
-    const [y,m]=r.month.split('-');
-    body=`${r.month!==THIS_MONTH?`<div class="notice"><span class="grow">${+m}月の実績が表示されてる。今月に切り替えると実績が0から始まって、前月分は履歴に残るよ。</span><button class="btn sm" data-act="newMonth">今月に切り替え</button></div>`:''}
-    <div class="card"><div class="toolbar"><div><div class="eyebrow">${y}年${+m}月の実績</div><div style="display:flex;align-items:baseline;gap:10px;margin-top:4px"><span class="big">${rate}%</span><span class="muted" style="font-variant-numeric:tabular-nums">${a} / ${t}件</span></div></div>
-      <span class="pill ${rate>=pace?'ok':'danger'}">${rate>=pace?'ペース通り':'ペースより遅れ'}</span></div>
-      <div class="bar" style="margin-top:12px;--c:var(--genba)"><i style="width:${Math.min(rate,100)}%"></i><span class="pace" style="left:${pace}%"></span></div>
-      <div class="small muted" style="margin-top:6px">縦線は月の経過（${pace}%）。これより右にバーが伸びていれば順調。</div></div>
-    <div class="card"><div class="card-h"><h2>商材別</h2><button class="btn sm sub" data-act="addProd">${ic('plus')}商材を追加</button></div>
-      ${r.products.length?r.products.map(p=>{const pr=p.target?Math.round(p.actual/p.target*100):0;const c=pr>=100?'var(--ok)':pr>=pace?'var(--genba)':'var(--warn)';
-        return `<div class="prow"><button class="nm" data-act="editProd" data-id="${p.id}">${esc(p.name)} <span class="muted small">目標 ${p.target}</span></button>
-        <div class="stepper"><button data-act="inc" data-id="${p.id}" data-d="-1" aria-label="${esc(p.name)}を1減らす">−</button><span class="num" style="min-width:56px;text-align:center">${p.actual}<span class="muted small"> 件</span></span><button data-act="inc" data-id="${p.id}" data-d="1" aria-label="${esc(p.name)}を1増やす">＋</button></div>
-        <div class="bar" style="--c:${c}"><i style="width:${Math.min(pr,100)}%"></i></div></div>`}).join(''):'<div class="empty">商材を追加して目標を入れてね</div>'}
-    </div>`;
+    body=areaList('genba');
   }
-  return `${hdr(esc(AREAS.genba.name),esc(AREAS.genba.full))}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定'],['res','実績'],['sheet','スプシ']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.genba.name),esc(AREAS.genba.full))}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定']],s)}${body}</div>`;
 }
 
 /* ===== NK ===== */
@@ -666,10 +683,12 @@ function vNk(){
       return `<div class="card mon ${k===0?'now':''}"><h3>${mo}月${k===0?'<span class="pill accent">今月</span>':''}</h3>${its.length?its.map(y=>`<div class="row" data-act="editYear" data-id="${y.id}"><button class="chk ${y.done?'on':''}" style="margin:0" data-act="yToggle" data-id="${y.id}" aria-label="完了">${ic('check')}</button><div class="rbody"><div class="rtitle ${y.done?'struck':''}">${esc(y.title)}</div></div></div>`).join(''):'<div class="small" style="color:var(--faint);padding:6px 0">—</div>'}</div>`}).join('')}</div>`;
   }else if(s==='store'){
     body=storeView();
+  }else if(s==='alert'){
+    body=alertView();
   }else if(s==='gas'){
     body=embedView();
   }else body=areaList('nk');
-  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['store','店舗'],['ads','広告'],['year','年間'],['todo','予定'],['gas','GASアプリ']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['store','店舗'],['alert','アラート'],['ads','広告'],['year','年間'],['todo','予定'],['gas','GASアプリ']],s)}${body}</div>`;
 }
 
 /* ===== ARKZOO / 個人 ===== */
@@ -705,12 +724,7 @@ function vSet(){
     ${Object.keys(AREA_DEF).map(k=>`<div class="frow"><label class="f"><span>メニュー名（${esc(AREA_DEF[k].name)}）</span><input id="n_${k}_name" value="${esc((S.names[k]||{}).name||'')}" placeholder="${esc(AREA_DEF[k].name)}"></label><label class="f"><span>サブタイトル</span><input id="n_${k}_full" value="${esc((S.names[k]||{}).full||'')}" placeholder="${esc(AREA_DEF[k].full)}"></label></div>`).join('')}
     <div><button class="btn" data-act="saveNames">保存</button></div></div>
   <div class="card setrow"><h2>連携（GAS中継）</h2>
-    <div class="small muted">中継用GAS（gas-bridge.gs）を「ウェブアプリ」として公開して、そのURLと合言葉を入れる。店舗スプシは店舗のシートを持っているアカウントで、カレンダーは個人アカウントで、それぞれ公開する。</div>
-    <h3 style="margin:6px 0 0;font-size:15px">店舗スプレッドシート</h3>
-    <label class="f"><span>中継GASのURL（…/exec）</span><input id="c_sheet_url" type="url" value="${esc(S.conn.sheet.url)}"></label>
-    <div class="frow"><label class="f"><span>合言葉</span><input id="c_sheet_token" type="password" autocomplete="off" value="${esc(S.conn.sheet.token)}"></label>
-    <label class="f"><span>スプシのURL（「スプシで開く」用・任意）</span><input id="c_sheet_open" type="url" value="${esc(S.conn.sheet.open||'')}"></label></div>
-    <div><button class="btn sm" data-act="connTest" data-k="sheet">保存して接続テスト</button></div>
+    <div class="small muted">Googleカレンダーは中継用GAS（gas-bridge.gs）、勤怠アプリは勤怠アプリ本体のGASを「ウェブアプリ」として公開して、そのURLと合言葉を入れる。</div>
     <h3 style="margin:10px 0 0;font-size:15px">Googleカレンダー（個人）</h3>
     <label class="f"><span>中継GASのURL（…/exec）</span><input id="c_cal_url" type="url" value="${esc(S.conn.cal.url)}"></label>
     <label class="f"><span>合言葉</span><input id="c_cal_token" type="password" autocomplete="off" value="${esc(S.conn.cal.token)}"></label>
@@ -727,7 +741,8 @@ function vSet(){
     <label class="f"><span>モデル名</span><input id="s_model" value="${esc(S.settings.model)}"><span class="hint">無料で使えるモデルは時期で変わる。動かないときはAI Studioで最新の名前を確認してね。</span></label>
     <div class="notice"><span class="grow"><b>注意：</b>無料枠では送った内容がGoogleのAI改善に使われ、人が読む場合もある。お客様の氏名・電話番号・契約内容などは入れないこと。</span></div>
     <div><button class="btn" data-act="saveKey">保存</button></div></div>
-  <div class="card setrow"><h2>出勤人数のしきい値</h2>
+  <div class="card setrow"><h2>出勤人数の目安</h2>
+    <div class="small muted">シフト表の右端にある「出勤」人数が、この数より少ない日を赤字にして気づけるようにする設定。人が足りない日を見つけるためのもので、勤怠アプリには影響しない。</div>
     <label class="f"><span>この人数未満の日を赤字にする</span><input id="s_min" type="number" min="0" value="${S.minStaff}"></label><div><button class="btn sub" data-act="saveMin">保存</button></div></div>
   <div class="card setrow"><h2>データ</h2>
     <div class="small muted">データはこの端末のブラウザに保存されてる。Safariの履歴削除で消えるので、ときどき書き出しておくと安心。</div>
@@ -918,10 +933,14 @@ async function loadKintai(){
 }
 function ksVal(month,ni,day){const k=month+'|'+ni+'|'+day;if(k in ui.ks.pending)return ui.ks.pending[k];
   const m=ui.ks.data[month==='next'?'nextMonth':'thisMonth'];const r=m&&m.rows[day-1];return !!(r&&r.koukyu[ni])}
+function ksBar(){
+  const d=ui.ks.data,mon=ui.ks.month,n=Object.keys(ui.ks.pending).length;
+  return `<div class="toolbar" id="ksbar"><div class="chips"><button class="chip ${mon==='this'?'on':''}" data-act="ksMon" data-k="this">${d?esc(d.thisMonth.label):'今月'}</button><button class="chip ${mon==='next'?'on':''}" data-act="ksMon" data-k="next">${d?esc(d.nextMonth.label):'来月'}</button></div>
+    <div style="display:flex;gap:8px">${n?`<button class="btn sm sub" data-act="ksUndo">取り消し</button>`:''}<button class="btn sm ${n?'':'sub'}" data-act="${n?'ksSave':'ksReload'}">${ui.ks.busy?'通信中…':n?`保存（${n}件）`:'再読み込み'}</button></div></div>`;
+}
 function kintaiShiftView(){
   const d=ui.ks.data;const mon=ui.ks.month;const n=Object.keys(ui.ks.pending).length;
-  const bar=`<div class="toolbar"><div class="chips"><button class="chip ${mon==='this'?'on':''}" data-act="ksMon" data-k="this">${d?esc(d.thisMonth.label):'今月'}</button><button class="chip ${mon==='next'?'on':''}" data-act="ksMon" data-k="next">${d?esc(d.nextMonth.label):'来月'}</button></div>
-    <div style="display:flex;gap:8px">${n?`<button class="btn sm sub" data-act="ksUndo">取り消し</button>`:''}<button class="btn sm ${n?'':'sub'}" data-act="${n?'ksSave':'ksReload'}">${ui.ks.busy?'通信中…':n?`保存（${n}件）`:'再読み込み'}</button></div></div>`;
+  const bar=ksBar();
   if(ui.ks.err)return bar+`<div class="card"><div class="empty short">${esc(ui.ks.err)}</div></div>`;
   if(!d)return bar+`<div class="card"><div class="empty">${ui.ks.busy?'勤怠アプリから読み込み中…':'読み込んでいないよ'}</div></div>`;
   const M=d[mon==='next'?'nextMonth':'thisMonth'];const names=d.names;
@@ -957,11 +976,13 @@ async function loadStores(){
   ui.st.busy=false;render();
 }
 function stDirty(){return ui.st.edit&&JSON.stringify(ui.st.edit)!==JSON.stringify(ui.st.data)}
+function stBar(){const dirty=stDirty();
+  return `<div class="toolbar" id="stbar"><span class="small muted">誰がどの店舗を担当するか（勤怠報告の店舗選択に使われる）</span>
+    <div style="display:flex;gap:8px">${dirty?'<button class="btn sm sub" data-act="stUndo">取り消し</button>':''}<button class="btn sm ${dirty?'':'sub'}" data-act="${dirty?'stSave':'stReload'}">${ui.st.busy?'通信中…':dirty?'保存':'再読み込み'}</button></div></div>`}
 function storeView(){
   if(!S.conn.kintai.url)return `<div class="card"><div class="empty">勤怠アプリとまだつながっていないよ。設定 →「連携」→「勤怠アプリ」で入れてね。</div></div>`;
   const E=ui.st.edit,dirty=stDirty();
-  const bar=`<div class="toolbar"><span class="small muted">誰がどの店舗を担当するか（勤怠報告の店舗選択に使われる）</span>
-    <div style="display:flex;gap:8px">${dirty?'<button class="btn sm sub" data-act="stUndo">取り消し</button>':''}<button class="btn sm ${dirty?'':'sub'}" data-act="${dirty?'stSave':'stReload'}">${ui.st.busy?'通信中…':dirty?'保存':'再読み込み'}</button></div></div>`;
+  const bar=stBar();
   if(ui.st.err)return bar+`<div class="card"><div class="empty short">${esc(ui.st.err)}</div></div>`;
   if(!E)return bar+`<div class="card"><div class="empty">${ui.st.busy?'勤怠アプリから読み込み中…':'読み込んでいないよ'}</div></div>`;
   return bar+`<div class="card setrow"><h2>店舗リスト</h2>
@@ -977,6 +998,35 @@ async function stSave(){
   ui.st.busy=true;render();
   try{await bridge('kintai',{action:'saveStores',allStores:ui.st.edit.allStores,staff:ui.st.edit.staff},true);toast('店舗設定を保存した');ui.st.at=0;await loadStores()}
   catch(e){ui.st.busy=false;render();toast('保存できなかった：'+e.message)}
+}
+
+/* ===== アラート設定 ===== */
+const hhmm=s=>{if(!s)return '';const p=String(s).split(':');if(p.length!==2)return '';return pad(+p[0])+':'+pad(+p[1])};
+const hmm=s=>{if(!s)return '';const p=s.split(':');return (+p[0])+':'+p[1]};
+async function loadAlerts(){
+  ui.al.busy=true;ui.al.err='';render();
+  try{const j=await bridge('kintai',{action:'alerts'});ui.al.data=(j.staff||[]).map(x=>({name:x.name,depart:hhmm(x.depart),clockin:hhmm(x.clockin),leave:hhmm(x.leave)}));
+    ui.al.edit=JSON.parse(JSON.stringify(ui.al.data));ui.al.at=Date.now()}
+  catch(e){ui.al.err=e.message}
+  ui.al.busy=false;render();
+}
+function alDirty(){return ui.al.edit&&JSON.stringify(ui.al.edit)!==JSON.stringify(ui.al.data)}
+function alBar(){const d=alDirty();
+  return `<div class="toolbar" id="albar"><span class="small muted">この時刻を過ぎても未報告だと、役職者部屋にアラートが届く（空欄＝アラートなし）</span>
+    <div style="display:flex;gap:8px">${d?'<button class="btn sm sub" data-act="alUndo">取り消し</button>':''}<button class="btn sm ${d?'':'sub'}" data-act="${d?'alSave':'alReload'}">${ui.al.busy?'通信中…':d?'保存':'再読み込み'}</button></div></div>`}
+function alertView(){
+  if(!S.conn.kintai.url)return `<div class="card"><div class="empty">勤怠アプリとまだつながっていないよ。設定 →「連携」→「勤怠アプリ」で入れてね。</div></div>`;
+  const E=ui.al.edit;const bar=alBar();
+  if(ui.al.err)return bar+`<div class="card"><div class="empty short">${esc(ui.al.err)}</div></div>`;
+  if(!E)return bar+`<div class="card"><div class="empty">${ui.al.busy?'勤怠アプリから読み込み中…':'読み込んでいないよ'}</div></div>`;
+  return bar+`<div class="card" style="padding:10px"><div class="tablewrap sheetwrap" data-fit><table class="grid ks al"><thead><tr><th>氏名</th><th>出発</th><th>出勤</th><th>退勤</th></tr></thead><tbody>
+    ${E.map((p,i)=>`<tr><th style="text-align:left">${esc(p.name)}</th>${['depart','clockin','leave'].map(k=>`<td><input type="time" id="al_${k}_${i}" value="${esc(p[k])}" data-change="alTime" data-i="${i}" data-k="${k}"></td>`).join('')}</tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+async function alSave(){
+  ui.al.busy=true;render();
+  try{await bridge('kintai',{action:'saveAlerts',staff:ui.al.edit.map(p=>({name:p.name,depart:hmm(p.depart),clockin:hmm(p.clockin),leave:hmm(p.leave)}))},true);toast('アラート設定を保存した');await loadAlerts()}
+  catch(e){ui.al.busy=false;render();toast('保存できなかった：'+e.message)}
 }
 
 /* ===== 今日の出勤（ホーム） ===== */
@@ -1026,6 +1076,196 @@ function embSheet(x){
     onDelete:x?()=>{S.embeds=S.embeds.filter(y=>y!==x);ui.emb=''}:null});
 }
 
+/* ===== ボディメイク ===== */
+const BPARTS=['胸','肩','腕','背中','脚','腹','全身','その他'];
+const BMEALS=[['b','朝'],['l','昼'],['d','夜'],['s','間食']];
+function bodyDef(){
+  const plan={};for(let i=0;i<7;i++)plan[i]={t:[],m:{b:'',l:'',d:'',s:'',kcal:''}};
+  return {goal:{startDate:'',startW:'',startF:'',targetW:'',targetF:'',targetDate:''},plan,over:{},logs:{},
+    lib:[{name:'ベンチプレス',part:'胸'},{name:'デッドリフト',part:'背中'},{name:'スクワット',part:'脚'},{name:'ショルダープレス',part:'肩'},{name:'アームカール',part:'腕'}]};
+}
+const B=()=>S.body;
+const n1=x=>Math.round(x*10)/10;
+const dayDiff=(a,b)=>Math.round((new Date(b+'T00:00')-new Date(a+'T00:00'))/864e5);
+const wdOf=d=>new Date(d+'T00:00').getDay();
+function bPlan(date){return B().over[date]||B().plan[wdOf(date)]}
+function bGoalOk(){const g=B().goal;return !!(g.startDate&&g.targetDate&&+g.startW&&+g.targetW&&g.targetDate>g.startDate)}
+function bIdeal(date,key){
+  const g=B().goal;const s=key==='f'?+g.startF:+g.startW,t=key==='f'?+g.targetF:+g.targetW;
+  if(!bGoalOk()||!s||!t||date<g.startDate)return null;
+  const all=dayDiff(g.startDate,g.targetDate),k=Math.min(1,dayDiff(g.startDate,date)/all);
+  return s+(t-s)*k;
+}
+function bLatest(key){
+  const L=B().logs;const ds=Object.keys(L).filter(d=>d<=TODAY&&+L[d][key]).sort();
+  return ds.length?{date:ds[ds.length-1],v:+L[ds[ds.length-1]][key]}:null;
+}
+function bPace(){
+  const g=B().goal;if(!bGoalOk())return null;
+  const wk=dayDiff(g.startDate,g.targetDate)/7;const kg=(+g.startW-+g.targetW)/wk;const pct=kg/+g.startW*100;
+  const judge=pct<=0?['増量・維持','var(--genba)']:pct<0.5?['ゆっくり','var(--genba)']:pct<=1?['理想的なペース','var(--ok)']:['速すぎ（筋肉が落ちやすい）','var(--danger)'];
+  return {kg,pct,wk,judge};
+}
+function bStatus(){
+  if(!bGoalOk())return null;
+  const g=B().goal,lw=bLatest('w');if(!lw)return {noLog:true};
+  const ideal=bIdeal(lw.date,'w');const diff=ideal==null?0:lw.v-ideal;
+  const left=lw.v-+g.targetW;const remW=Math.max(0.1,dayDiff(lw.date,g.targetDate)/7);
+  const need=left/remW;const needPct=need/lw.v*100;
+  let newDate='';if(needPct>1&&left>0){const weeks=left/(lw.v*0.0075);newDate=addDays(lw.date,Math.ceil(weeks*7))}
+  return {lw,ideal,diff,left,need,needPct,newDate};
+}
+function bodyStat(){
+  const st=bStatus();if(!st||st.noLog)return '';
+  const done=st.left<=0;
+  return `<div class="card stat"><div class="lab">ボディメイク 目標まで</div><div class="val">${done?'達成':n1(st.left)}<small>${done?'':'kg'}</small></div><div class="small ${st.diff>0.3?'short':''}" style="font-weight:700">${st.diff>0.3?`理想より +${n1(st.diff)}kg`:st.diff<-0.3?`理想より ${n1(st.diff)}kg（先行）`:'理想どおり'}</div></div>`;
+}
+function bodyContext(L){
+  const g=B().goal;if(!bGoalOk())return;
+  const st=bStatus(),p=bPlan(TODAY);
+  L.push(`【ボディメイク】${g.startDate} ${g.startW}kg → 目標 ${g.targetDate} ${g.targetW}kg${g.targetF?`・体脂肪${g.targetF}%`:''}`);
+  if(st&&!st.noLog)L.push(`- 最新 ${st.lw.date} ${st.lw.v}kg／その日の理想 ${n1(st.ideal)}kg／必要ペース 週${n1(st.need)}kg`);
+  L.push(`- 今日のトレーニング：${p.t.map(bItemText).join('、')||'休養日'}`);
+  L.push(`- 今日の食事：${BMEALS.map(([k,l])=>p.m[k]?l+'：'+p.m[k]:'').filter(Boolean).join('／')||'未設定'}`);
+}
+function bItemText(x){return x.kind==='c'?`${x.name} ${x.min||0}分`:`${x.name}${x.sets?` ${x.sets}×${x.reps||0}`:''}${+x.kg?` ${x.kg}kg`:''}`}
+
+function vBody(){
+  const t=ui.seg.body||'cal';
+  let body=t==='trend'?bTrendView():t==='goal'?bGoalView():t==='menu'?bMenuView():bCalView();
+  return `${hdr('ボディメイク','目標までの道筋')}<div class="stack">${seg('body',[['cal','カレンダー'],['trend','推移'],['goal','目標'],['menu','メニュー']],t)}${body}</div>`;
+}
+function bSummary(){
+  const g=B().goal,st=bStatus();
+  if(!bGoalOk())return `<div class="card"><div class="empty">まず「目標」タブで、今の体重と目標の体重・期限を入れてね。<br>そこから理想のペースの線を引いて、毎日の記録と比べられるようになる。</div></div>`;
+  if(st.noLog)return `<div class="card"><div class="empty">カレンダーの日付をタップして、体重を記録してね。</div></div>`;
+  const prog=Math.max(0,Math.min(100,(+g.startW-st.lw.v)/(+g.startW-+g.targetW)*100));
+  return `<div class="card"><div class="bsum">
+    <div><div class="lab">現在</div><div class="big">${st.lw.v}<small>kg</small></div><div class="small muted">${fmtD(st.lw.date)}</div></div>
+    <div><div class="lab">理想</div><div class="big">${n1(st.ideal)}<small>kg</small></div><div class="small ${st.diff>0.3?'short':'muted'}" style="font-weight:700">${st.diff>=0?'+':''}${n1(st.diff)}kg</div></div>
+    <div><div class="lab">目標</div><div class="big">${g.targetW}<small>kg</small></div><div class="small muted">${fmtD(g.targetDate)}まで</div></div></div>
+    <div class="bar" style="margin-top:12px;--c:var(--accent)"><i style="width:${prog}%"></i></div>
+    <div class="small muted" style="margin-top:6px">スタート ${g.startW}kg から ${Math.round(prog)}% 進んだ</div></div>`;
+}
+function bCalView(){
+  const [y,m]=ui.bm.month.split('-').map(Number);
+  const first=`${y}-${pad(m)}-01`;const start=mondayOf(first);
+  const dim=new Date(y,m,0).getDate();const last=`${y}-${pad(m)}-${pad(dim)}`;
+  const cells=[];for(let d=start;cells.length<42;d=addDays(d,1)){cells.push(d);if(d>=last&&cells.length%7===0)break}
+  const L=B().logs;
+  return bSummary()+`<div class="card">
+    <div class="toolbar" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:4px"><button class="navarrow" data-act="bMon" data-d="-1" aria-label="前の月">${ic('l')}</button><b style="font-size:16px">${y}年${m}月</b><button class="navarrow" data-act="bMon" data-d="1" aria-label="次の月">${ic('r')}</button></div>
+    <button class="btn sm sub" data-act="bMon0">今月</button></div>
+    <div class="bcal">${['月','火','水','木','金','土','日'].map(w=>`<div class="bwh">${w}</div>`).join('')}
+    ${cells.map(d=>{const p=bPlan(d),lg=L[d]||{},inM=d.slice(0,7)===ui.bm.month;
+      const tn=p.t.length,td=p.t.filter(x=>lg.td&&lg.td[x.id]).length;
+      const mk=BMEALS.filter(([k])=>p.m[k]),md=mk.filter(([k])=>lg.md&&lg.md[k]).length;
+      const past=d<=TODAY&&(!B().goal.startDate||d>=B().goal.startDate);
+      const tc=!tn?'rest':td===tn?'ok':td?'part':past&&d<TODAY?'miss':'plan';
+      const mc=!mk.length?'':md===mk.length?'ok':md?'part':past&&d<TODAY?'miss':'plan';
+      return `<button class="bday ${inM?'':'out'} ${d===TODAY?'today':''} ${B().over[d]?'ovr':''}" data-act="bDay" data-d="${d}">
+        <span class="bn">${+d.slice(8)}</span>${+lg.w?`<span class="bw">${lg.w}</span>`:''}
+        <span class="bdots">${tn?`<i class="t ${tc}" title="トレーニング"></i>`:'<em>休</em>'}${mc?`<i class="m ${mc}" title="食事"></i>`:''}</span></button>`}).join('')}</div>
+    <div class="blegend small muted"><span><i class="t ok"></i>トレ完了</span><span><i class="t part"></i>一部</span><span><i class="t miss"></i>未実施</span><span><i class="m ok"></i>食事OK</span><span>休＝休養日</span><span><b style="color:var(--accent)">●</b>枠＝その日だけメニュー変更</span></div></div>`;
+}
+function bChart(key){
+  const g=B().goal,L=B().logs;const pts=Object.keys(L).filter(d=>+L[d][key]).sort().map(d=>({d,v:+L[d][key]}));
+  const s0=bGoalOk()?g.startDate:(pts[0]&&pts[0].d),e0=bGoalOk()?g.targetDate:(pts.length?pts[pts.length-1].d:'');
+  if(!s0||!e0||s0>=e0)return '<div class="empty">記録が2日分以上になるとグラフが出るよ</div>';
+  const xs=pts.length&&pts[0].d<s0?pts[0].d:s0,xe=pts.length&&pts[pts.length-1].d>e0?pts[pts.length-1].d:e0;
+  const span=Math.max(1,dayDiff(xs,xe));
+  const iv=[bIdeal(g.startDate,key),key==='f'?+g.targetF:+g.targetW].filter(v=>v);
+  const vals=pts.map(p=>p.v).concat(iv);if(!vals.length)return '<div class="empty">データがまだないよ</div>';
+  let lo=Math.min(...vals),hi=Math.max(...vals);const padv=Math.max(0.5,(hi-lo)*0.12);lo-=padv;hi+=padv;
+  const W=640,H=230,l=44,r=14,t=12,b=26;
+  const X=d=>l+(W-l-r)*dayDiff(xs,d)/span,Y=v=>t+(H-t-b)*(1-(v-lo)/(hi-lo));
+  const ticks=[0,1,2,3].map(i=>lo+(hi-lo)*i/3);
+  const grid=ticks.map(v=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" class="cg"/><text x="${l-6}" y="${Y(v)+4}" class="ct" text-anchor="end">${n1(v)}</text>`).join('');
+  const ideal=bGoalOk()&&iv.length===2?`<line x1="${X(g.startDate)}" y1="${Y(iv[0])}" x2="${X(g.targetDate)}" y2="${Y(iv[1])}" class="ci"/>`:'';
+  const line=pts.length>1?`<polyline points="${pts.map(p=>X(p.d)+','+Y(p.v)).join(' ')}" class="ca"/>`:'';
+  const dots=pts.map((p,i)=>`<circle cx="${X(p.d)}" cy="${Y(p.v)}" r="${i===pts.length-1?4.5:2.6}" class="cd"/>`).join('');
+  const tx=TODAY>=xs&&TODAY<=xe?`<line x1="${X(TODAY)}" x2="${X(TODAY)}" y1="${t}" y2="${H-b}" class="ctd"/><text x="${X(TODAY)}" y="${H-8}" class="ct" text-anchor="middle">今日</text>`:'';
+  const lab=`<text x="${l}" y="${H-8}" class="ct">${fmtD(xs)}</text><text x="${W-r}" y="${H-8}" class="ct" text-anchor="end">${fmtD(xe)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="bchart" role="img" aria-label="${key==='f'?'体脂肪率':'体重'}の推移">${grid}${tx}${ideal}${line}${dots}${lab}</svg>
+    <div class="blegend small muted"><span><b class="lgi"></b>理想の道筋</span><span><b class="lga"></b>実際の記録</span></div>`;
+}
+function bTrendView(){
+  const st=bStatus(),g=B().goal,k=ui.bm.metric;
+  let fix='';
+  if(st&&!st.noLog&&st.left>0){
+    const behind=st.diff>0.3,ahead=st.diff<-0.3;
+    fix=`<div class="card setrow"><h2>軌道修正</h2>
+      <div>${behind?`理想より <b class="short">${n1(st.diff)}kg</b> 遅れてる。`:ahead?`理想より <b>${n1(-st.diff)}kg</b> 先行してる。`:'ほぼ理想どおりに進んでる。'}
+      期限までに目標に届くには、ここから <b>週${n1(st.need)}kg</b>（体重の${n1(st.needPct)}%／週）のペースが必要。</div>
+      ${st.needPct>1?`<div class="notice"><span class="grow">週1%を超えると筋肉が落ちやすいと言われてる。期限を <b>${fmtD(st.newDate)}</b> に延ばすと、週0.75%の無理のないペースになる。</span><button class="btn sm" data-act="bReplan" data-k="extend">期限を延ばして引き直す</button></div>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm sub" data-act="bReplan" data-k="keep">今の体重から引き直す（期限はそのまま）</button></div>
+      <div class="small muted">引き直すと、スタートが「${fmtD(st.lw.date)}・${st.lw.v}kg」になって、理想の線がそこから引かれる。過去の記録はそのまま残る。</div></div>`;
+  }
+  return bSummary()+`<div class="card"><div class="card-h"><h2>推移</h2><div class="chips"><button class="chip ${k==='w'?'on':''}" data-act="bMetric" data-k="w">体重</button><button class="chip ${k==='f'?'on':''}" data-act="bMetric" data-k="f">体脂肪率</button></div></div>${bChart(k)}</div>`+fix;
+}
+function bGoalView(){
+  const g=B().goal,p=bPace(),lw=bLatest('w'),lf=bLatest('f');
+  return `<div class="card setrow"><h2>目標</h2>
+    <div class="frow"><label class="f"><span>スタート日</span><input id="bg_sd" type="date" value="${esc(g.startDate||TODAY)}"></label><label class="f"><span>期限</span><input id="bg_td" type="date" value="${esc(g.targetDate)}"></label></div>
+    <div class="frow"><label class="f"><span>スタート時の体重（kg）</span><input id="bg_sw" type="number" step="0.1" inputmode="decimal" value="${esc(g.startW||(lw?lw.v:''))}"></label><label class="f"><span>目標の体重（kg）</span><input id="bg_tw" type="number" step="0.1" inputmode="decimal" value="${esc(g.targetW)}"></label></div>
+    <div class="frow"><label class="f"><span>スタート時の体脂肪率（%・任意）</span><input id="bg_sf" type="number" step="0.1" inputmode="decimal" value="${esc(g.startF||(lf?lf.v:''))}"></label><label class="f"><span>目標の体脂肪率（%・任意）</span><input id="bg_tf" type="number" step="0.1" inputmode="decimal" value="${esc(g.targetF)}"></label></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="bGoalSave">保存</button><button class="btn sub" data-act="bSuggest">おすすめの期限を入れる</button></div>
+    <div class="small muted">「おすすめの期限」は、体重の0.75%／週で落とした場合の日付。一般に週0.5〜1%が、筋肉を残しながら脂肪を落としやすいペースと言われてる。</div></div>
+    ${p?`<div class="card"><div class="card-h"><h2>この目標のペース</h2><span class="pill" style="--c:${p.judge[1]}">${p.judge[0]}</span></div>
+      <div class="bsum"><div><div class="lab">1週間あたり</div><div class="big">${n1(p.kg)}<small>kg</small></div></div><div><div class="lab">体重に対して</div><div class="big">${n1(p.pct)}<small>%</small></div></div><div><div class="lab">期間</div><div class="big">${Math.round(p.wk)}<small>週</small></div></div></div></div>`:''}`;
+}
+function bEditTarget(){if(ui.bm.odate){const d=ui.bm.odate;if(!B().over[d])B().over[d]=JSON.parse(JSON.stringify(B().plan[wdOf(d)]));return B().over[d]}return B().plan[ui.bm.mwd]}
+function bMenuView(){
+  const od=ui.bm.odate,P=od?(B().over[od]||B().plan[wdOf(od)]):B().plan[ui.bm.mwd];
+  const days=[1,2,3,4,5,6,0];
+  const head=od?`<div class="notice"><span class="grow"><b>${fmtD(od)}だけ</b>のメニューを編集中。曜日の固定メニューは変わらない。</span><button class="btn sm sub" data-act="bOverEnd">固定メニューの編集に戻る</button>${B().over[od]?'<button class="btn sm danger" data-act="bOverDel">この日の変更をやめる</button>':''}</div>`
+    :`<div class="chips">${days.map(w=>`<button class="chip ${ui.bm.mwd===w?'on':''}" data-act="bWd" data-k="${w}">${WD[w]}${B().plan[w].t.length?'':'・休'}</button>`).join('')}</div>`;
+  const lib=B().lib;
+  return head+`<div class="card setrow"><div class="card-h"><h2>トレーニング${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2>${P.t.length?'':'<span class="pill">休養日</span>'}</div>
+    ${P.t.map(x=>`<div class="row" style="cursor:default"><span class="stripe" style="--c:${x.kind==='c'?'var(--genba)':'var(--accent)'}"></span><div class="rbody"><div class="rtitle">${esc(bItemText(x))}</div><div class="rmeta">${x.kind==='c'?'有酸素':esc(x.part||'')}</div></div><button class="link" style="color:var(--danger)" data-act="bItemDel" data-id="${x.id}">削除</button></div>`).join('')}
+    <div class="badd">
+      <label class="f"><span>種類</span><select id="bi_kind"><option value="s">筋トレ</option><option value="c">有酸素</option></select></label>
+      <label class="f"><span>種目</span><input id="bi_name" list="bi_lib" placeholder="例：ベンチプレス"><datalist id="bi_lib">${lib.map(x=>`<option value="${esc(x.name)}">`).join('')}<option value="ランニング"><option value="ウォーキング"><option value="バイク"></datalist></label>
+      <label class="f"><span>部位</span><select id="bi_part">${BPARTS.map(p=>`<option>${p}</option>`).join('')}</select></label>
+      <label class="f"><span>セット</span><input id="bi_sets" type="number" inputmode="numeric"></label>
+      <label class="f"><span>回数</span><input id="bi_reps" type="number" inputmode="numeric"></label>
+      <label class="f"><span>重量kg</span><input id="bi_kg" type="number" step="0.5" inputmode="decimal"></label>
+      <label class="f"><span>時間（分）</span><input id="bi_min" type="number" inputmode="numeric"></label>
+      <div class="f" style="justify-content:flex-end"><button class="btn" data-act="bItemAdd">追加</button></div></div>
+    <div class="small muted">筋トレはセット・回数・重量、有酸素は時間を入れる。新しい種目名は自動で候補に追加される。</div></div>
+  <div class="card setrow"><h2>食事${od?'':`（${WD[ui.bm.mwd]}曜日）`}</h2>
+    ${BMEALS.map(([k,l])=>`<label class="f"><span>${l}</span><input id="bm_${k}" value="${esc(P.m[k]||'')}" data-change="bMeal" data-k="${k}" placeholder="例：${k==='b'?'オートミール＋プロテイン':k==='l'?'鶏むね定食':k==='d'?'魚・野菜・ご飯少なめ':'ナッツ'}"></label>`).join('')}
+    <label class="f"><span>目安カロリー（kcal・任意）</span><input id="bm_kcal" type="number" inputmode="numeric" value="${esc(P.m.kcal||'')}" data-change="bMeal" data-k="kcal"></label>
+    <div class="small muted">入力すると自動で保存される。</div></div>
+  ${od?'':`<div class="card setrow"><h2>${WD[ui.bm.mwd]}曜日のメニューをコピー</h2><div class="chips">${days.filter(w=>w!==ui.bm.mwd).map(w=>`<button class="chip" data-act="bCopy" data-k="${w}">${WD[w]}曜日へ</button>`).join('')}</div><div class="small muted">コピー先のトレーニングと食事は上書きされる。</div></div>`}`;
+}
+function bDaySheet(d){
+  const P=bPlan(d),lg=B().logs[d]||{},iw=bIdeal(d,'w'),ifat=bIdeal(d,'f');
+  document.getElementById('sheet').innerHTML=`<h3>${fmtD(d)}${d===TODAY?' 今日':''}</h3>
+  <form id="bdayForm" novalidate>
+    <div class="frow"><label class="f"><span>体重（kg）${iw?`　理想 ${n1(iw)}`:''}</span><input id="bd_w" type="number" step="0.1" inputmode="decimal" value="${esc(lg.w||'')}"></label>
+    <label class="f"><span>体脂肪率（%）${ifat?`　理想 ${n1(ifat)}`:''}</span><input id="bd_f" type="number" step="0.1" inputmode="decimal" value="${esc(lg.f||'')}"></label></div>
+    <div class="f"><span>トレーニング${B().over[d]?'（この日だけ変更済み）':''}</span>
+      ${P.t.length?P.t.map(x=>`<label class="bchk"><input type="checkbox" id="bd_t_${x.id}" ${lg.td&&lg.td[x.id]?'checked':''}><span>${esc(bItemText(x))}</span></label>`).join(''):'<div class="small muted">休養日</div>'}</div>
+    <div class="f"><span>食事${P.m.kcal?`（目安 ${esc(P.m.kcal)}kcal）`:''}</span>
+      ${BMEALS.map(([k,l])=>`<div class="bmeal"><label class="bchk"><input type="checkbox" id="bd_m_${k}" ${lg.md&&lg.md[k]?'checked':''}><span>${l}</span></label><input id="bd_a_${k}" value="${esc((lg.ma||{})[k]||'')}" placeholder="${esc(P.m[k]||'実際に食べたもの')}"></div>`).join('')}
+      <div class="small muted">チェック＝予定どおり食べた。違うものを食べたら右に書く。</div></div>
+    <label class="f"><span>メモ</span><textarea id="bd_memo" style="min-height:60px">${esc(lg.memo||'')}</textarea></label>
+    <div class="sheet-actions"><button type="button" class="btn sub" data-act="bOverEdit" data-d="${d}">この日のメニューを変更</button><div class="r"><button type="button" class="btn sub" data-act="sheetClose">キャンセル</button><button type="submit" class="btn">保存</button></div></div>
+  </form>`;
+  sheetCb={fields:[],onSave:()=>{},onDelete:null,bday:d};
+  document.getElementById('sheetWrap').hidden=false;
+}
+function bSaveDay(d){
+  const P=bPlan(d),v=id=>(document.getElementById(id)?.value||'').trim(),c=id=>!!document.getElementById(id)?.checked;
+  const lg={w:v('bd_w'),f:v('bd_f'),td:{},md:{},ma:{},memo:v('bd_memo')};
+  P.t.forEach(x=>{if(c('bd_t_'+x.id))lg.td[x.id]=true});
+  BMEALS.forEach(([k])=>{if(c('bd_m_'+k))lg.md[k]=true;const a=v('bd_a_'+k);if(a)lg.ma[k]=a});
+  B().logs[d]=lg;
+  const g=B().goal;if(!g.startW&&+lg.w){g.startW=lg.w;if(!g.startDate)g.startDate=d}
+  closeSheet();commit('記録した');
+}
+
 /* ===== AI ===== */
 const SYS='あなたは竹渕さん（呼び名：ぶっちー）の業務アシスタント。携帯キャリアの販売業務（家電量販店）を管理する課長。回答はカジュアルな日本語で短く、箇条書き中心。データに無いことは推測で埋めず「データからは分からない」と書く。';
 function contextText(){
@@ -1036,7 +1276,7 @@ function contextText(){
   sortItems(near).sort((a,b)=>a.date.localeCompare(b.date)).forEach(i=>L.push(`- ${i.date} ${i.time||''} [${AREAS[i.area].name}/${i.kind==='task'?'タスク':'予定'}${i.done?'/完了':''}] ${i.title}`));
   S.items.filter(i=>i.kind==='task'&&!i.done&&!i.date).forEach(i=>L.push(`- 期限なし [${AREAS[i.area].name}/タスク] ${i.title}`));
   L.push('【案件】');S.deals.forEach(d=>L.push(`- ${d.name}：${d.content}／${d.stage}／次回 ${d.next||'未設定'}`));
-  const r=achRate();L.push(`【今月実績】達成率${r.rate}%（月の経過${monthPace()}%）`);S.results.products.forEach(p=>L.push(`- ${p.name} ${p.actual}/${p.target}`));
+  bodyContext(L);
   const mon=mondayOf(TODAY);L.push('【今週の出勤人数】'+[...Array(7)].map((_,k)=>{const d=addDays(mon,k);return `${fmtD(d)}:${S.members.filter(m=>S.shifts[m+'|'+d]==='出').length}人`}).join(' ')+`（目安${S.minStaff}人）`);
   L.push('【求人・SNS】');S.ads.forEach(a=>L.push(`- ${a.name}：${a.status}／反応${a.apply}／次の更新 ${a.next||'未設定'}`));
   return L.join('\n');
@@ -1109,7 +1349,7 @@ function toClaude(){
 }
 
 /* ===== 描画とイベント ===== */
-const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,set:vSet};
+const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,body:vBody,set:vSet};
 function render(){
   document.getElementById('main').innerHTML=launcherBar()+VIEWS[ui.view]();
   document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand" style="color:var(--accent)">${esc(appName())}</div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
@@ -1125,7 +1365,7 @@ function fitPanels(){
   main.classList.toggle('fit',els.length>0);
   if(!els.length)return;
   window.scrollTo(0,0);
-  requestAnimationFrame(()=>{
+  const fit=()=>{
     const tab=document.getElementById('tabbar');
     const bottom=MQ.matches?14:(tab?tab.getBoundingClientRect().height:0)+10;
     els.forEach(el=>{
@@ -1134,7 +1374,8 @@ function fitPanels(){
       const h=window.innerHeight-el.getBoundingClientRect().top-extra-bottom;
       el.style.height=Math.max(300,Math.floor(h))+'px';
     });
-  });
+  };
+  fit();requestAnimationFrame(fit);
 }
 function renderAI(){document.getElementById('aipane').innerHTML=aiPane();scrollChat()}
 function applyLayout(){
@@ -1174,7 +1415,7 @@ function commit(msg){save();render();if(msg)toast(msg)}
 
 const ACT={
   nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;if(ui.view==='home'&&S.conn.kintai.url&&Date.now()-ui.td.at>5*60000)setTimeout(loadToday,0);if(ui.view==='nk'&&ui.seg.nk==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)setTimeout(loadKintai,0);try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
-  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets();if(el.dataset.g==='nk'&&el.dataset.k==='store'&&S.conn.kintai.url&&!ui.st.busy&&!stDirty()&&Date.now()-ui.st.at>60000)loadStores();if(el.dataset.g==='nk'&&el.dataset.k==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)loadKintai()},
+  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets();if(el.dataset.g==='nk'&&el.dataset.k==='alert'&&S.conn.kintai.url&&!ui.al.busy&&!alDirty()&&Date.now()-ui.al.at>60000)loadAlerts();if(el.dataset.g==='nk'&&el.dataset.k==='store'&&S.conn.kintai.url&&!ui.st.busy&&!stDirty()&&Date.now()-ui.st.at>60000)loadStores();if(el.dataset.g==='nk'&&el.dataset.k==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)loadKintai()},
   pick:el=>{ui.sel=el.dataset.d;ui.week=mondayOf(ui.sel);render()},
   wk:el=>{ui.week=addDays(ui.week,+el.dataset.d);ui.sel=ui.week;render()},
   swk:el=>{ui.shiftWeek=addDays(ui.shiftWeek,+el.dataset.d);render()},
@@ -1207,14 +1448,44 @@ const ACT={
   ksCell:el=>{if(ui.ks.busy)return;const mon=ui.ks.month,ni=+el.dataset.n,day=+el.dataset.d,k=mon+'|'+ni+'|'+day;
     const m=ui.ks.data[mon==='next'?'nextMonth':'thisMonth'];const orig=!!(m.rows[day-1].koukyu[ni]);
     const nv=!ksVal(mon,ni,day);if(nv===orig)delete ui.ks.pending[k];else ui.ks.pending[k]=nv;
-    const sc=document.querySelector('.sheetwrap');const st=sc?sc.scrollTop:0,sl=sc?sc.scrollLeft:0;render();
-    const sc2=document.querySelector('.sheetwrap');if(sc2){sc2.scrollTop=st;sc2.scrollLeft=sl}},
+    el.classList.toggle('off',nv);el.classList.toggle('chg',k in ui.ks.pending);el.textContent=nv?'公休':'';
+    const tr=el.parentElement,cn=tr.querySelector('td.cnt');const c=[...tr.querySelectorAll('td.kc')].filter(t=>!t.classList.contains('off')).length;
+    if(cn){cn.textContent=c;cn.classList.toggle('short',c<S.minStaff)}
+    const b=document.getElementById('ksbar');if(b)b.outerHTML=ksBar()},
   ksSave:()=>ksSave(),
   stReload:()=>loadStores(),
+  alReload:()=>loadAlerts(),
+  bMon:el=>{const [y,m]=ui.bm.month.split('-').map(Number);const d=new Date(y,m-1+(+el.dataset.d),1);ui.bm.month=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},
+  bMon0:()=>{ui.bm.month=THIS_MONTH;render()},
+  bDay:el=>bDaySheet(el.dataset.d),
+  bMetric:el=>{ui.bm.metric=el.dataset.k;render()},
+  bReplan:el=>{const st=bStatus();if(!st||st.noLog)return;const g=B().goal;g.startDate=st.lw.date;g.startW=String(st.lw.v);
+    const lf=bLatest('f');if(lf&&g.targetF)g.startF=String(lf.v);if(el.dataset.k==='extend'&&st.newDate)g.targetDate=st.newDate;commit('理想の道筋を引き直した')},
+  bGoalSave:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();
+    const g={startDate:v('bg_sd'),targetDate:v('bg_td'),startW:v('bg_sw'),targetW:v('bg_tw'),startF:v('bg_sf'),targetF:v('bg_tf')};
+    if(!g.startDate||!g.targetDate||!+g.startW||!+g.targetW){toast('スタート日・期限・体重を入れてね');return}
+    if(g.targetDate<=g.startDate){toast('期限はスタート日より後にしてね');return}
+    B().goal=g;commit('目標を保存した')},
+  bSuggest:()=>{const v=id=>+(document.getElementById(id)?.value||0);const sw=v('bg_sw'),tw=v('bg_tw');
+    const sd=document.getElementById('bg_sd').value||TODAY;
+    if(!sw||!tw||tw>=sw){toast('スタートと目標の体重を入れてね（目標は軽く）');return}
+    document.getElementById('bg_td').value=addDays(sd,Math.ceil((sw-tw)/(sw*0.0075)*7));toast('おすすめの期限を入れた。よければ保存してね')},
+  bWd:el=>{ui.bm.mwd=+el.dataset.k;render()},
+  bItemAdd:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();const kind=v('bi_kind');
+    const it={id:uid(),kind,name:v('bi_name')||(kind==='c'?'ランニング':''),part:kind==='c'?'':v('bi_part'),sets:v('bi_sets'),reps:v('bi_reps'),kg:v('bi_kg'),min:v('bi_min')};
+    if(!it.name){toast('種目を入れてね');return}if(kind==='c'&&!+it.min){toast('時間（分）を入れてね');return}
+    bEditTarget().t.push(it);if(kind==='s'&&!B().lib.some(x=>x.name===it.name))B().lib.push({name:it.name,part:it.part});commit('追加した')},
+  bItemDel:el=>{const P=bEditTarget();P.t=P.t.filter(x=>x.id!==el.dataset.id);commit()},
+  bCopy:el=>{const src=B().plan[ui.bm.mwd];B().plan[+el.dataset.k]={t:src.t.map(x=>({...x,id:uid()})),m:{...src.m}};commit(WD[+el.dataset.k]+'曜日にコピーした')},
+  bOverEdit:el=>{const d=el.dataset.d;closeSheet();ui.view='body';ui.seg.body='menu';ui.bm.odate=d;render();window.scrollTo(0,0)},
+  bOverEnd:()=>{ui.bm.odate='';render()},
+  bOverDel:()=>{delete B().over[ui.bm.odate];ui.bm.odate='';commit('固定メニューに戻した')},
+  alUndo:()=>{ui.al.edit=JSON.parse(JSON.stringify(ui.al.data));render()},
+  alSave:()=>alSave(),
   stUndo:()=>{ui.st.edit=JSON.parse(JSON.stringify(ui.st.data));render()},
   stSave:()=>stSave(),
   stCell:el=>{const p=ui.st.edit.staff[+el.dataset.p],st=el.dataset.s;const i=p.stores.indexOf(st);if(i>=0)p.stores.splice(i,1);else p.stores.push(st);
-    const sc=document.querySelector('.sheetwrap');const a=sc?sc.scrollTop:0,b=sc?sc.scrollLeft:0;render();const s2=document.querySelector('.sheetwrap');if(s2){s2.scrollTop=a;s2.scrollLeft=b}},
+    const on=i<0;el.classList.toggle('on',on);el.textContent=on?'担当':'';const b=document.getElementById('stbar');if(b)b.outerHTML=stBar()},
   stAdd:()=>{const v=(document.getElementById('st_new')?.value||'').trim();if(!v){toast('店舗名を入れてね');return}
     if(ui.st.edit.allStores.includes(v)){toast('もうあるよ');return}ui.st.edit.allStores.push(v);ui.st.newStore='';render()},
   stDel:el=>{const st=ui.st.edit.allStores[+el.dataset.i];ui.st.edit.allStores.splice(+el.dataset.i,1);ui.st.edit.staff.forEach(p=>{p.stores=p.stores.filter(x=>x!==st)});render()},
@@ -1228,10 +1499,10 @@ const ACT={
     el.textContent='保存して接続テスト'},
   add:()=>{
     if(ui.view==='genba'&&ui.seg.genba==='deal')return dealSheet();
-    if(ui.view==='genba'&&ui.seg.genba==='res')return prodSheet();
+    if(ui.view==='body')return bDaySheet(TODAY);
     if(ui.view==='nk'&&ui.seg.nk==='ads')return adSheet();
     if(ui.view==='nk'&&ui.seg.nk==='year')return yearSheet();
-    if(ui.view==='nk'&&ui.seg.nk==='shift')return membersSheet();
+    if(ui.view==='nk'&&ui.seg.nk==='shift'&&!S.conn.kintai.url)return membersSheet();
     const area=AREAS[ui.view]?ui.view:'genba';
     itemSheet(null,{area,kind:area==='ark'?'task':'event',date:ui.view==='home'?ui.sel:TODAY});
   },
@@ -1255,14 +1526,14 @@ const ACT={
   saveMin:()=>{S.minStaff=Math.max(0,Number(document.getElementById('s_min').value)||0);commit('保存した')},
   export:()=>{try{const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`work-backup-${TODAY}.json`;document.body.appendChild(a);a.click();a.remove();toast('書き出した')}catch(e){toast('書き出せなかった。コピーを使ってね')}},
   copyJson:()=>{const s=JSON.stringify(S);if(navigator.clipboard)navigator.clipboard.writeText(s).then(()=>toast('コピーした'),()=>toast('コピーできなかった'));else toast('コピーできなかった')},
-  blank:el=>{const keepNames=S.names;armConfirm(el,'もう一度押すと全部空になる',()=>{const kc=S.conn,ke=S.embeds;S=blank(S.settings);S.names=keepNames;S.conn=kc;S.embeds=ke;S.gcal={at:0,events:[]};ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')})},
-  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings,nm=S.names,ln=S.launcher,S_conn_keep=S.conn,S_emb_keep=S.embeds;S=sample();S.settings=k;S.names=nm;S.launcher=ln;S.conn=S_conn_keep;S.embeds=S_emb_keep;S.gcal={at:0,events:[]};commit('サンプルに戻した')}),
+  blank:el=>{const keepNames=S.names;armConfirm(el,'もう一度押すと全部空になる',()=>{const kc=S.conn,ke=S.embeds,kb=S.body;S=blank(S.settings);S.names=keepNames;S.conn=kc;S.embeds=ke;S.body=kb;S.gcal={at:0,events:[]};ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')})},
+  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings,nm=S.names,ln=S.launcher,S_body_keep=S.body,S_conn_keep=S.conn,S_emb_keep=S.embeds;S=sample();S.settings=k;S.names=nm;S.launcher=ln;S.body=S_body_keep;S.conn=S_conn_keep;S.embeds=S_emb_keep;S.gcal={at:0,events:[]};commit('サンプルに戻した')}),
   sheetClose:()=>closeSheet(),
   sheetDel:el=>{if(!sheetCb)return;if(!sheetCb.delArmed){sheetCb.delArmed=true;el.textContent='本当に削除';return}sheetCb.onDelete();closeSheet();commit('削除した')}
 };
 function readConn(){const v=id=>(document.getElementById(id)?.value||'').trim();
-  if(!document.getElementById('c_sheet_url'))return;
-  S.conn={sheet:{url:v('c_sheet_url'),token:v('c_sheet_token'),open:v('c_sheet_open')},cal:{url:v('c_cal_url'),token:v('c_cal_token')},kintai:{url:v('c_kintai_url'),token:v('c_kintai_token')}};ui.sh.at=0}
+  if(!document.getElementById('c_cal_url'))return;
+  S.conn={sheet:S.conn.sheet||{url:'',token:'',open:''},cal:{url:v('c_cal_url'),token:v('c_cal_token')},kintai:{url:v('c_kintai_url'),token:v('c_kintai_token')}};ui.sh.at=0}
 function setTheme(k){theme=k;try{localStorage.setItem(KEY+'_theme',k)}catch(e){}applyTheme();render();toast('表示：'+THEMES.find(t=>t[0]===k)[1])}
 function armConfirm(el,msg,fn){if(el.dataset.armed){fn();return}el.dataset.armed='1';const o=el.textContent;el.textContent=msg;setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent=o}},3500)}
 
@@ -1272,12 +1543,14 @@ document.addEventListener('click',e=>{
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
 document.addEventListener('change',e=>{
+  if(e.target.dataset&&e.target.dataset.change==='bMeal'){const P=bEditTarget();P.m[e.target.dataset.k]=e.target.value;save();return}
+  if(e.target.dataset&&e.target.dataset.change==='alTime'){const p=ui.al.edit[+e.target.dataset.i];p[e.target.dataset.k]=e.target.value;const b=document.getElementById('albar');if(b)b.outerHTML=alBar();return}
   if(e.target.id==='f_preset'){const p=LPRESET.find(x=>x[0]===e.target.value);if(p&&p[0]){document.getElementById('f_name').value=p[2];document.getElementById('f_url').value=p[3]}return}
   const el=e.target.closest('[data-change]');if(!el)return;const t=el.dataset.change;
   if(t==='stage'){const d=byId(S.deals,el.dataset.id);if(d){d.stage=el.value;commit(el.value==='成約'?'成約おめでとう！':'')}}
   if(t==='adStatus'){const a=byId(S.ads,el.dataset.id);if(a){a.status=el.value;commit()}}
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
-  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.conn.kintai)S.conn.kintai={url:'',token:''};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
+  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.conn.kintai)S.conn.kintai={url:'',token:''};if(!S.launcher)S.launcher=defaultLaunch();if(!S.body)S.body=bodyDef();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
 document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value;if(e.target.id==='st_new')ui.st.newStore=e.target.value});
 document.addEventListener('keydown',e=>{
@@ -1286,6 +1559,7 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();runAI('free');
 });
 document.addEventListener('submit',e=>{
+  if(e.target.id==='bdayForm'){e.preventDefault();if(sheetCb&&sheetCb.bday)bSaveDay(sheetCb.bday);return}
   if(e.target.id!=='sheetForm')return;e.preventDefault();if(!sheetCb)return;
   const err=sheetCb.onSave(readSheet());if(err==='skip'){closeSheet();return}if(err){toast(err);return}
   closeSheet();commit('保存した');
