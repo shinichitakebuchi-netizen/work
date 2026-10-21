@@ -262,6 +262,16 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 .lbar-edit svg{width:17px;height:17px}
 .lbar-edit.on{color:var(--on-accent);background:var(--accent)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.sheetwrap{max-height:70vh;overflow:auto}
+table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums}
+.grid th,.grid td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 10px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.grid thead th{position:sticky;top:0;z-index:2;background:var(--glass-strong);color:var(--muted);font-weight:700;font-size:11.5px}
+.grid tbody th{position:sticky;left:0;z-index:1;background:var(--glass-strong);color:var(--faint);font-weight:600;font-size:11px;text-align:right}
+.grid tbody tr:first-child td{font-weight:700;background:color-mix(in srgb,var(--genba) 8%,transparent)}
+.grid td{cursor:pointer}.grid td:hover{background:var(--seg)}
+.grid td.fx{color:var(--muted);font-style:italic;cursor:default}
+.embed{padding:0;overflow:hidden}
+.embed iframe{display:block;width:100%;height:calc(100vh - 260px);min-height:480px;border:0;background:#fff}
 .launch{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:12px 8px}
 .ltile{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--fg);padding:4px 0;border-radius:14px;min-width:0}
 .lic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--c);
@@ -448,6 +458,9 @@ function defaultLaunch(){return [
 ]}
 if(!S.launcher){S.launcher=defaultLaunch()}
 if(!S.names)S.names={app:'WORK'};
+if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};
+if(!S.embeds)S.embeds=[];
+if(!S.gcal)S.gcal={at:0,events:[]};
 function appName(){return (S.names&&S.names.app)||'WORK'}
 function applyNames(){Object.keys(AREAS).forEach(k=>{const n=(S.names&&S.names[k])||{};AREAS[k].name=n.name||AREA_DEF[k].name;AREAS[k].full=n.full||AREA_DEF[k].full})}
 applyNames();
@@ -459,12 +472,14 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false};
+let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:''};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
 function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}${ui.view!=='set'?`<button class="iconbtn addbtn" data-act="add" aria-label="追加">${ic('plus')}</button>`:''}<button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
 function seg(g,opts,cur){return `<div class="seg" role="tablist">${opts.map(([k,l])=>`<button class="${k===cur?'on':''}" data-act="seg" data-g="${g}" data-k="${k}">${l}</button>`).join('')}</div>`}
+function gItems(){return (S.gcal&&S.gcal.events||[]).map(e=>({id:'g_'+e.gid,gid:e.gid,area:'me',kind:'event',tag:'Google',title:e.title,date:e.date,time:e.time,end:e.end,allDay:e.allDay,location:e.location,google:true}))}
+function allItems(){return S.items.concat(gItems())}
 function sortItems(a){return [...a].sort((x,y)=>{
   const rx=x.kind==='event'?(x.time?0:1):2,ry=y.kind==='event'?(y.time?0:1):2;
   if(rx!==ry)return rx-ry;return (x.time||'').localeCompare(y.time||'')||(x.date||'').localeCompare(y.date||'')})}
@@ -485,7 +500,7 @@ function grouped(list,empty){
   return Object.keys(g).sort().map(d=>`<div class="ghead">${d==='~'?'日付なし':fmtD(d)}${d===TODAY?'<span class="pill accent">今日</span>':''}${d!=='~'&&d<TODAY?'<span class="pill">過去</span>':''}</div>${sortItems(g[d]).map(i=>rowItem(i)).join('')}`).join('');
 }
 function areaList(area){
-  const all=S.items.filter(i=>i.area===area);
+  const all=allItems().filter(i=>i.area===area);
   const list=ui.past?all:all.filter(i=>!i.date||i.date>=TODAY||(i.kind==='task'&&!i.done));
   const hidden=all.length-list.length;
   return `<div class="card"><div class="card-h"><h2>予定・タスク</h2>${(hidden||ui.past)?`<button class="link" data-act="past">${ui.past?'過去を隠す':`過去の${hidden}件を表示`}</button>`:''}</div>${grouped(list,'まだ何もないよ。右下の＋から追加してね')}</div>`;
@@ -498,13 +513,13 @@ function vHome(){
   const h=new Date().getHours();
   const greet=h<11?'おはよう、ぶっちー':h<18?'おつかれさま、ぶっちー':'今日もおつかれ、ぶっちー';
   const d=new Date();
-  const todayEv=S.items.filter(i=>i.date===TODAY&&i.kind==='event');
-  const overdue=S.items.filter(i=>i.kind==='task'&&!i.done&&i.date&&i.date<TODAY);
+  const todayEv=allItems().filter(i=>i.date===TODAY&&i.kind==='event');
+  const overdue=allItems().filter(i=>i.kind==='task'&&!i.done&&i.date&&i.date<TODAY);
   const openDeals=S.deals.filter(x=>!['成約','失注'].includes(x.stage));
   const {rate}=achRate();const pace=monthPace();
   const days=[...Array(7)].map((_,k)=>addDays(ui.week,k));
-  const dayItems=S.items.filter(i=>i.date===ui.sel);
-  const todo=S.items.filter(i=>i.kind==='task'&&!i.done&&(!i.date||i.date<=addDays(TODAY,7))).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
+  const dayItems=allItems().filter(i=>i.date===ui.sel);
+  const todo=allItems().filter(i=>i.kind==='task'&&!i.done&&(!i.date||i.date<=addDays(TODAY,7))).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
   return `${hdr(greet,`${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`)}
   <div class="stack">
     ${S.sample?`<div class="notice"><span class="grow">いま表示しているのは<b>サンプルデータ</b>だよ。触って試したら、空にして本番スタートできる。</span><button class="btn sm sub" data-act="blank">空にして始める</button></div>`:''}
@@ -517,7 +532,7 @@ function vHome(){
     <div class="card">
       <div class="week">
         <button class="navarrow" data-act="wk" data-d="-7" aria-label="前の週">${ic('l')}</button>
-        ${days.map(s=>{const dd=new Date(s+'T00:00');const ar=[...new Set(S.items.filter(i=>i.date===s).map(i=>i.area))];
+        ${days.map(s=>{const dd=new Date(s+'T00:00');const ar=[...new Set(allItems().filter(i=>i.date===s).map(i=>i.area))];
           return `<button class="day ${s===ui.sel?'sel':''} ${s===TODAY?'today':''} ${dd.getDay()===0?'sun':''}" data-act="pick" data-d="${s}"><span class="w">${WD[dd.getDay()]}</span><span class="n">${dd.getDate()}</span><span class="dots">${ar.slice(0,4).map(a=>`<i style="--c:${AREAS[a].c}"></i>`).join('')}</span></button>`}).join('')}
         <button class="navarrow" data-act="wk" data-d="7" aria-label="次の週">${ic('r')}</button>
       </div>
@@ -578,6 +593,8 @@ function vGenba(){
       <div class="deal-top"><b>${esc(x.name)}</b><select class="psel" style="--c:${STAGE_C[x.stage]}" data-change="stage" data-id="${x.id}" aria-label="ステージ">${STAGES.map(st=>`<option ${st===x.stage?'selected':''}>${st}</option>`).join('')}</select></div>
       <div class="muted">${esc(x.content)||'—'}</div>
       <div class="deal-foot"><span class="${late?'short':''}">次回：${x.next?fmtD(x.next):(['成約','失注'].includes(x.stage)?'—':'<b class="short">未設定</b>')}</span><button class="link" data-act="editDeal" data-id="${x.id}">編集</button></div></div>`}).join('')}</div>`:'<div class="card"><div class="empty">該当する案件はないよ</div></div>'}`;
+  }else if(s==='sheet'){
+    body=sheetView();
   }else if(s==='sched'){
     body=areaList('genba');
   }else{
@@ -595,7 +612,7 @@ function vGenba(){
         <div class="bar" style="--c:${c}"><i style="width:${Math.min(pr,100)}%"></i></div></div>`}).join(''):'<div class="empty">商材を追加して目標を入れてね</div>'}
     </div>`;
   }
-  return `${hdr(esc(AREAS.genba.name),esc(AREAS.genba.full))}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定'],['res','実績']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.genba.name),esc(AREAS.genba.full))}<div class="stack">${seg('genba',[['deal','案件'],['sched','予定'],['res','実績'],['sheet','スプシ']],s)}${body}</div>`;
 }
 
 /* ===== NK ===== */
@@ -623,8 +640,10 @@ function vNk(){
     body=`<div class="toolbar"><span class="muted small">今月から12か月分</span><button class="btn sm" data-act="addYear">${ic('plus')}予定を追加</button></div>
     <div class="months">${[...Array(12)].map((_,k)=>{const mo=mAdd(k);const its=S.yearplan.filter(y=>y.month===mo);
       return `<div class="card mon ${k===0?'now':''}"><h3>${mo}月${k===0?'<span class="pill accent">今月</span>':''}</h3>${its.length?its.map(y=>`<div class="row" data-act="editYear" data-id="${y.id}"><button class="chk ${y.done?'on':''}" style="margin:0" data-act="yToggle" data-id="${y.id}" aria-label="完了">${ic('check')}</button><div class="rbody"><div class="rtitle ${y.done?'struck':''}">${esc(y.title)}</div></div></div>`).join(''):'<div class="small" style="color:var(--faint);padding:6px 0">—</div>'}</div>`}).join('')}</div>`;
+  }else if(s==='gas'){
+    body=embedView();
   }else body=areaList('nk');
-  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['ads','広告'],['year','年間'],['todo','予定']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['ads','広告'],['year','年間'],['todo','予定'],['gas','GASアプリ']],s)}${body}</div>`;
 }
 
 /* ===== ARKZOO / 個人 ===== */
@@ -635,7 +654,16 @@ function vArk(){
       <div><h2>立ち上げタスク</h2><div class="muted small">${done} / ${t.length} 完了。残りは期限の近い順に下に並んでる。</div></div></div>
     ${areaList('ark')}</div>`;
 }
-function vMe(){return `${hdr(esc(AREAS.me.name),esc(AREAS.me.full))}<div class="stack">${areaList('me')}</div>`}
+function vMe(){
+  const on=S.conn.cal&&S.conn.cal.url;
+  const at=S.gcal.at?new Date(S.gcal.at):null;
+  return `${hdr(esc(AREAS.me.name),esc(AREAS.me.full))}<div class="stack">
+    <div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px">
+      <span class="pill" style="--c:var(--me)">Googleカレンダー</span>
+      <span class="small muted" style="flex:1;min-width:160px">${on?(at?`最終同期 ${at.getMonth()+1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}・${S.gcal.events.length}件`:'まだ同期していない'):'未接続（設定 →「連携」で設定）'}</span>
+      ${on?`<button class="btn sm sub" data-act="gsync">${gBusy?'同期中…':'今すぐ同期'}</button>`:''}</div>
+    ${areaList('me')}</div>`;
+}
 
 /* ===== 設定 ===== */
 function vSet(){
@@ -650,6 +678,18 @@ function vSet(){
     <label class="f"><span>アプリ名</span><input id="n_app" value="${esc(S.names.app||'')}" placeholder="WORK"></label>
     ${Object.keys(AREA_DEF).map(k=>`<div class="frow"><label class="f"><span>メニュー名（${esc(AREA_DEF[k].name)}）</span><input id="n_${k}_name" value="${esc((S.names[k]||{}).name||'')}" placeholder="${esc(AREA_DEF[k].name)}"></label><label class="f"><span>サブタイトル</span><input id="n_${k}_full" value="${esc((S.names[k]||{}).full||'')}" placeholder="${esc(AREA_DEF[k].full)}"></label></div>`).join('')}
     <div><button class="btn" data-act="saveNames">保存</button></div></div>
+  <div class="card setrow"><h2>連携（GAS中継）</h2>
+    <div class="small muted">中継用GAS（gas-bridge.gs）を「ウェブアプリ」として公開して、そのURLと合言葉を入れる。店舗スプシは店舗のシートを持っているアカウントで、カレンダーは個人アカウントで、それぞれ公開する。</div>
+    <h3 style="margin:6px 0 0;font-size:15px">店舗スプレッドシート</h3>
+    <label class="f"><span>中継GASのURL（…/exec）</span><input id="c_sheet_url" type="url" value="${esc(S.conn.sheet.url)}"></label>
+    <div class="frow"><label class="f"><span>合言葉</span><input id="c_sheet_token" type="password" autocomplete="off" value="${esc(S.conn.sheet.token)}"></label>
+    <label class="f"><span>スプシのURL（「スプシで開く」用・任意）</span><input id="c_sheet_open" type="url" value="${esc(S.conn.sheet.open||'')}"></label></div>
+    <div><button class="btn sm" data-act="connTest" data-k="sheet">保存して接続テスト</button></div>
+    <h3 style="margin:10px 0 0;font-size:15px">Googleカレンダー（個人）</h3>
+    <label class="f"><span>中継GASのURL（…/exec）</span><input id="c_cal_url" type="url" value="${esc(S.conn.cal.url)}"></label>
+    <label class="f"><span>合言葉</span><input id="c_cal_token" type="password" autocomplete="off" value="${esc(S.conn.cal.token)}"></label>
+    <div><button class="btn sm" data-act="connTest" data-k="cal">保存して接続テスト</button></div>
+    <div class="notice"><span class="grow"><b>GASアプリの埋め込み：</b>既存のGASアプリの doGet で返している画面に <span class="kbd">.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)</span> を付け足して、新しいバージョンでデプロイし直すと、NK →「GASアプリ」に埋め込めるようになる。</span></div></div>
   <div class="card setrow"><h2>AI連携（Gemini・無料枠）</h2>
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
     <label class="f"><span>APIキー</span><input id="s_key" type="password" autocomplete="off" value="${esc(S.settings.apiKey)}" placeholder="AIza…"></label>
@@ -697,10 +737,12 @@ function itemSheet(it,def={}){
       {k:'date',label:'日付（タスクは期限）',type:'date',val:v.date,half:true},
       {k:'time',label:'時刻（予定のみ）',type:'time',val:v.time,half:true},
       {k:'tag',label:'タグ',val:v.tag,list:[...new Set(Object.values(AREAS).flatMap(a=>a.tags))]},
-      {k:'note',label:'メモ',type:'textarea',val:v.note}
+      {k:'note',label:'メモ',type:'textarea',val:v.note},
+      ...(!it&&S.conn.cal&&S.conn.cal.url?[{k:'gsend',label:'Googleカレンダーにも入れる（個人の予定のみ）',type:'select',opts:[['yes','入れる'],['no','入れない']],val:'yes'}]:[])
     ],
     onSave:o=>{if(!o.title)return '内容を入れてね';if(o.kind==='task')o.time='';
-      if(it)Object.assign(it,o);else S.items.push({id:uid(),done:false,...o});},
+      const send=o.gsend==='yes'&&o.area==='me'&&o.kind==='event';delete o.gsend;
+      if(it)Object.assign(it,o);else{const n={id:uid(),done:false,...o};S.items.push(n);if(send)setTimeout(()=>pushCal(n),0)}},
     onDelete:it?()=>{S.items=S.items.filter(x=>x!==it)}:null});
 }
 function dealSheet(d){
@@ -745,10 +787,113 @@ function membersSheet(){
     onSave:o=>{S.members=o.list.split('\n').map(s=>s.trim()).filter(Boolean)}});
 }
 
+/* ===== GAS中継 ===== */
+async function bridge(kind,params,post){
+  const c=S.conn&&S.conn[kind];
+  if(!c||!c.url)throw new Error('接続先が未設定。設定画面の「連携」で入れてね');
+  let res;
+  if(post){
+    res=await fetch(c.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...params,token:c.token})});
+  }else{
+    const u=new URL(c.url);Object.entries({...params,token:c.token}).forEach(([k,v])=>u.searchParams.set(k,v));
+    res=await fetch(u.toString());
+  }
+  let j;try{j=await res.json()}catch(e){throw new Error('返事を読めなかった（GASの公開設定が「全員」になっているか確認してね）')}
+  if(!j.ok)throw new Error(j.error||'失敗した');
+  return j;
+}
+let gBusy=false;
+async function syncCal(manual){
+  if(gBusy||!(S.conn.cal&&S.conn.cal.url))return;
+  gBusy=true;if(manual)render();
+  try{
+    const j=await bridge('cal',{action:'events',from:addDays(TODAY,-7),to:addDays(TODAY,60)});
+    S.gcal={at:Date.now(),events:j.events||[]};save();if(manual)toast(`Googleカレンダーから${S.gcal.events.length}件を読み込んだ`);
+  }catch(e){if(manual)toast('同期できなかった：'+e.message)}
+  gBusy=false;render();
+}
+async function pushCal(o){
+  try{
+    await bridge('cal',{action:'addEvent',title:o.title,date:o.date,time:o.time||'',note:o.note||''},true);
+    S.items=S.items.filter(x=>x.id!==o.id);save();toast('Googleカレンダーに追加した');await syncCal(false);
+  }catch(e){toast('Googleに追加できなかった（アプリ内には保存済み）：'+e.message)}
+}
+function gEventSheet(g){
+  document.getElementById('sheet').innerHTML=`<h3>${esc(g.title)}</h3>
+    <div class="stack" style="gap:8px;margin-bottom:14px">
+      <div><span class="pill" style="--c:var(--me)">Googleカレンダー</span></div>
+      <div>${fmtD(g.date)} ${g.allDay?'終日':esc(g.time)+(g.end?'〜'+esc(g.end):'')}</div>
+      ${g.location?`<div class="muted">場所：${esc(g.location)}</div>`:''}
+      <div class="small muted">Googleの予定はここでは見るだけ。変更や削除はGoogleカレンダーで行ってね。</div></div>
+    <div class="sheet-actions"><a class="btn sub" href="https://calendar.google.com/calendar/r/day/${g.date.replace(/-/g,'/')}" target="_blank" rel="noopener">Googleカレンダーで開く</a><div class="r"><button type="button" class="btn" data-act="sheetClose">閉じる</button></div></div>`;
+  sheetCb={fields:[],onSave:()=>{},onDelete:null};
+  document.getElementById('sheetWrap').hidden=false;
+}
+
+/* ===== スプレッドシート表示 ===== */
+async function loadSheets(){
+  ui.sh.busy=true;ui.sh.err='';render();
+  try{const j=await bridge('sheet',{action:'sheets'});ui.sh.title=j.title;ui.sh.list=j.sheets||[];
+    if(!ui.sh.name||!ui.sh.list.some(x=>x.name===ui.sh.name))ui.sh.name=ui.sh.list[0]&&ui.sh.list[0].name;
+    if(ui.sh.name)await loadSheet(ui.sh.name,true);}
+  catch(e){ui.sh.err=e.message}
+  ui.sh.busy=false;render();
+}
+async function loadSheet(name,inner){
+  ui.sh.name=name;if(!inner){ui.sh.busy=true;ui.sh.err='';render()}
+  try{const j=await bridge('sheet',{action:'sheet',name});ui.sh.values=j.values||[];ui.sh.formulas=j.formulas||[];ui.sh.more=j.more||0;ui.sh.at=Date.now()}
+  catch(e){ui.sh.err=e.message;ui.sh.values=[]}
+  if(!inner){ui.sh.busy=false;render()}
+}
+function colName(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}
+function sheetView(){
+  const c=S.conn.sheet||{};
+  if(!c.url)return `<div class="card"><div class="empty">店舗のスプレッドシートとはまだつながっていないよ。<br>設定 →「連携」で、中継用GASのURLと合言葉を入れてね。</div></div>`;
+  const v=ui.sh.values||[];
+  const head=`<div class="toolbar"><div class="chips">${(ui.sh.list||[]).map(x=>`<button class="chip ${x.name===ui.sh.name?'on':''}" data-act="shPick" data-k="${esc(x.name)}">${esc(x.name)}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px">${c.open?`<a class="btn sm sub" href="${esc(c.open)}" target="_blank" rel="noopener">スプシで開く</a>`:''}<button class="btn sm sub" data-act="shReload">${ui.sh.busy?'読み込み中…':'再読み込み'}</button></div></div>`;
+  if(ui.sh.err)return head+`<div class="card"><div class="empty short">${esc(ui.sh.err)}</div></div>`;
+  if(!v.length)return head+`<div class="card"><div class="empty">${ui.sh.busy?'読み込み中…':'このシートは空だよ'}</div></div>`;
+  const cols=Math.max(...v.map(r=>r.length));
+  return head+`<div class="card" style="padding:10px"><div class="small muted" style="margin:0 4px 8px">${esc(ui.sh.title||'')}／${esc(ui.sh.name)}　セルをタップすると編集できる（数式のセルは保護）${ui.sh.more?`　※先頭${v.length}行だけ表示中（残り${ui.sh.more}行はスプシで確認）`:''}</div>
+    <div class="tablewrap sheetwrap"><table class="grid"><thead><tr><th></th>${[...Array(cols)].map((_,i)=>`<th>${colName(i)}</th>`).join('')}</tr></thead><tbody>
+    ${v.map((r,ri)=>`<tr><th>${ri+1}</th>${[...Array(cols)].map((_,ci)=>{const f=(ui.sh.formulas[ri]||[])[ci];return `<td class="${f?'fx':''}" data-act="cell" data-r="${ri}" data-c="${ci}">${esc(r[ci]??'')}</td>`}).join('')}</tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+function cellSheet(r,c){
+  if((ui.sh.formulas[r]||[])[c]){toast('数式のセルなので編集できないよ');return}
+  const cur=(ui.sh.values[r]||[])[c]??'';
+  openSheet({title:`${ui.sh.name}　${colName(c)}${r+1}`,note:`見出し：${esc((ui.sh.values[0]||[])[c]??'')}`,
+    fields:[{k:'v',label:'値',type:'textarea',val:cur}],
+    onSave:o=>{const val=o.v;
+      bridge('sheet',{action:'setCell',name:ui.sh.name,row:r+1,col:c+1,value:val},true)
+        .then(()=>{(ui.sh.values[r]=ui.sh.values[r]||[])[c]=val;render();toast('スプシに書き込んだ')})
+        .catch(e=>toast('書き込めなかった：'+e.message));
+      return 'skip'}});
+}
+
+/* ===== GASアプリ埋め込み ===== */
+function embedView(){
+  const E=S.embeds;
+  const cur=E.find(x=>x.id===ui.emb)||E[0];
+  return `<div class="toolbar"><div class="chips">${E.map(x=>`<button class="chip ${cur&&x.id===cur.id?'on':''}" data-act="embPick" data-k="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px">${cur?`<a class="btn sm sub" href="${esc(cur.url)}" target="_blank" rel="noopener">別タブで開く</a><button class="btn sm sub" data-act="embEdit" data-k="${cur.id}">編集</button>`:''}<button class="btn sm" data-act="embAdd">${ic('plus')}アプリを登録</button></div></div>
+    ${cur?`<div class="card embed"><iframe src="${esc(cur.url)}" title="${esc(cur.name)}" loading="lazy"></iframe></div>
+      <div class="small muted">真っ白やエラーのときは、GAS側に埋め込み許可の1行が必要（設定の「連携」に説明あり）。それでもダメなら「別タブで開く」を使ってね。</div>`
+      :`<div class="card"><div class="empty">勤怠管理やシフト管理など、GASで作ったアプリのURL（…/exec）を登録すると、ここに埋め込んで使えるよ。</div></div>`}`;
+}
+function embSheet(x){
+  const v=x||{name:'',url:''};
+  openSheet({title:x?'GASアプリを編集':'GASアプリを登録',fields:[{k:'name',label:'表示名',val:v.name},{k:'url',label:'ウェブアプリのURL',type:'url',val:v.url,hint:'GASの「デプロイを管理」に出ている、…/exec で終わるURL'}],
+    onSave:o=>{if(!o.name)return '表示名を入れてね';if(!/^https:\/\//.test(o.url))return 'https:// で始まるURLを入れてね';
+      if(x)Object.assign(x,o);else{const n={id:uid(),...o};S.embeds.push(n);ui.emb=n.id}},
+    onDelete:x?()=>{S.embeds=S.embeds.filter(y=>y!==x);ui.emb=''}:null});
+}
+
 /* ===== AI ===== */
 const SYS='あなたは竹渕さん（呼び名：ぶっちー）の業務アシスタント。携帯キャリアの販売業務（家電量販店）を管理する課長。回答はカジュアルな日本語で短く、箇条書き中心。データに無いことは推測で埋めず「データからは分からない」と書く。';
 function contextText(){
-  const near=S.items.filter(i=>i.date&&i.date>=addDays(TODAY,-7)&&i.date<=addDays(TODAY,7));
+  const near=allItems().filter(i=>i.date&&i.date>=addDays(TODAY,-7)&&i.date<=addDays(TODAY,7));
   const L=[];
   L.push(`今日：${TODAY}（${WD[new Date().getDay()]}）`);
   L.push('【予定・タスク（前後7日）】');
@@ -781,7 +926,7 @@ function localAnswer(q){
   const overdue=S.items.filter(i=>i.kind==='task'&&!i.done&&i.date&&i.date<TODAY);
   const tasks=S.items.filter(i=>i.kind==='task'&&!i.done).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
   if(q==='plan'){
-    const ev=sortItems(S.items.filter(i=>i.date===TODAY&&i.kind==='event'));
+    const ev=sortItems(allItems().filter(i=>i.date===TODAY&&i.kind==='event'));
     L.push('**今日の予定**');ev.length?ev.forEach(e=>L.push(`・${e.time||'終日'} ${e.title}`)):L.push('・予定なし');
     L.push('','**空き時間でやること**');tasks.slice(0,3).forEach(t=>L.push(`・${t.title}${t.date&&t.date<TODAY?'（期限切れ）':t.date===TODAY?'（今日まで）':''}`));
     if(!tasks.length)L.push('・なし');
@@ -873,8 +1018,8 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 function commit(msg){save();render();if(msg)toast(msg)}
 
 const ACT={
-  nav:el=>{ui.view=el.dataset.v;ui.past=false;try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
-  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render()},
+  nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
+  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets()},
   pick:el=>{ui.sel=el.dataset.d;ui.week=mondayOf(ui.sel);render()},
   wk:el=>{ui.week=addDays(ui.week,+el.dataset.d);ui.sel=ui.week;render()},
   swk:el=>{ui.shiftWeek=addDays(ui.shiftWeek,+el.dataset.d);render()},
@@ -896,7 +1041,17 @@ const ACT={
   theme:el=>setTheme(el.dataset.k),
   themeCycle:()=>{const i=THEMES.findIndex(t=>t[0]===theme);setTheme(THEMES[(i+1)%THEMES.length][0])},
   toggle:el=>{const i=byId(S.items,el.dataset.id);if(i){i.done=!i.done;commit(i.done?'完了！':'未完了に戻した')}},
-  edit:el=>{const i=byId(S.items,el.dataset.id);if(i)itemSheet(i)},
+  edit:el=>{const id=el.dataset.id;if(id.startsWith('g_')){const g=gItems().find(x=>x.id===id);if(g)gEventSheet(g);return}const i=byId(S.items,id);if(i)itemSheet(i)},
+  gsync:()=>syncCal(true),
+  shPick:el=>loadSheet(el.dataset.k),
+  shReload:()=>loadSheets(),
+  cell:el=>cellSheet(+el.dataset.r,+el.dataset.c),
+  embPick:el=>{ui.emb=el.dataset.k;render()},
+  embAdd:()=>embSheet(),
+  embEdit:el=>embSheet(S.embeds.find(x=>x.id===el.dataset.k)),
+  connTest:async el=>{const k=el.dataset.k;readConn();save();el.textContent='確認中…';
+    try{const j=await bridge(k,{action:'ping'});toast('つながった：'+(j.me||'OK'));if(k==='cal')syncCal(false)}catch(e){toast('つながらない：'+e.message)}
+    el.textContent='保存して接続テスト'},
   add:()=>{
     if(ui.view==='genba'&&ui.seg.genba==='deal')return dealSheet();
     if(ui.view==='genba'&&ui.seg.genba==='res')return prodSheet();
@@ -926,11 +1081,14 @@ const ACT={
   saveMin:()=>{S.minStaff=Math.max(0,Number(document.getElementById('s_min').value)||0);commit('保存した')},
   export:()=>{try{const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`work-backup-${TODAY}.json`;document.body.appendChild(a);a.click();a.remove();toast('書き出した')}catch(e){toast('書き出せなかった。コピーを使ってね')}},
   copyJson:()=>{const s=JSON.stringify(S);if(navigator.clipboard)navigator.clipboard.writeText(s).then(()=>toast('コピーした'),()=>toast('コピーできなかった'));else toast('コピーできなかった')},
-  blank:el=>{const keepNames=S.names;armConfirm(el,'もう一度押すと全部空になる',()=>{S=blank(S.settings);S.names=keepNames;ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')})},
-  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings,nm=S.names,ln=S.launcher;S=sample();S.settings=k;S.names=nm;S.launcher=ln;commit('サンプルに戻した')}),
+  blank:el=>{const keepNames=S.names;armConfirm(el,'もう一度押すと全部空になる',()=>{const kc=S.conn,ke=S.embeds;S=blank(S.settings);S.names=keepNames;S.conn=kc;S.embeds=ke;S.gcal={at:0,events:[]};ui.view='home';commit('空にした（ARKZOOの3タスクだけ残してある）')})},
+  resetSample:el=>armConfirm(el,'もう一度押すとサンプルに戻る',()=>{const k=S.settings,nm=S.names,ln=S.launcher,S_conn_keep=S.conn,S_emb_keep=S.embeds;S=sample();S.settings=k;S.names=nm;S.launcher=ln;S.conn=S_conn_keep;S.embeds=S_emb_keep;S.gcal={at:0,events:[]};commit('サンプルに戻した')}),
   sheetClose:()=>closeSheet(),
   sheetDel:el=>{if(!sheetCb)return;if(!sheetCb.delArmed){sheetCb.delArmed=true;el.textContent='本当に削除';return}sheetCb.onDelete();closeSheet();commit('削除した')}
 };
+function readConn(){const v=id=>(document.getElementById(id)?.value||'').trim();
+  if(!document.getElementById('c_sheet_url'))return;
+  S.conn={sheet:{url:v('c_sheet_url'),token:v('c_sheet_token'),open:v('c_sheet_open')},cal:{url:v('c_cal_url'),token:v('c_cal_token')}};ui.sh.at=0}
 function setTheme(k){theme=k;try{localStorage.setItem(KEY+'_theme',k)}catch(e){}applyTheme();render();toast('表示：'+THEMES.find(t=>t[0]===k)[1])}
 function armConfirm(el,msg,fn){if(el.dataset.armed){fn();return}el.dataset.armed='1';const o=el.textContent;el.textContent=msg;setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent=o}},3500)}
 
@@ -944,7 +1102,7 @@ document.addEventListener('change',e=>{
   if(t==='stage'){const d=byId(S.deals,el.dataset.id);if(d){d.stage=el.value;commit(el.value==='成約'?'成約おめでとう！':'')}}
   if(t==='adStatus'){const a=byId(S.ads,el.dataset.id);if(a){a.status=el.value;commit()}}
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
-  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
+  if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
 document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value});
 document.addEventListener('keydown',e=>{
@@ -954,11 +1112,12 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('submit',e=>{
   if(e.target.id!=='sheetForm')return;e.preventDefault();if(!sheetCb)return;
-  const err=sheetCb.onSave(readSheet());if(err){toast(err);return}
+  const err=sheetCb.onSave(readSheet());if(err==='skip'){closeSheet();return}if(err){toast(err);return}
   closeSheet();commit('保存した');
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetCb)closeSheet()});
 initSplit();
+if(S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),300);
 if(MQ.addEventListener)MQ.addEventListener('change',()=>{ui.aiMobile=false;render()});
 window.addEventListener('resize',()=>{if(MQ.matches)applyLayout()});
 render();
