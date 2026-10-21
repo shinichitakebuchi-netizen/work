@@ -59,7 +59,7 @@ button{cursor:pointer;border:none;background:none}
 main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 130px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 @media (min-width:860px){
-  .app{grid-template-columns:236px 1fr}
+  .app{grid-template-columns:220px 6px minmax(0,1fr) 6px 380px}
   .side{display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;padding:26px 14px;
     padding-left:max(14px,env(safe-area-inset-left,0px));
     background:var(--glass);backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);border-right:1px solid var(--line)}
@@ -74,6 +74,34 @@ main{min-width:0;width:100%;max-width:1120px;margin:0 auto;padding-block:18px 13
 .navbtn .dot{width:8px;height:8px;border-radius:50%;background:var(--c);margin-left:auto}
 .navbtn.on{background:var(--glass-strong);color:var(--fg);box-shadow:var(--shadow)}
 .navbtn.on svg{color:var(--accent)}
+.brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.paneclose{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+.paneclose:hover{background:var(--seg)}
+.paneclose svg{width:18px;height:18px}
+/* 仕切り（ドラッグで幅変更） */
+.split{display:none;position:relative;cursor:col-resize;touch-action:none;
+  background:linear-gradient(var(--line),var(--line)) center/1px 100% no-repeat}
+.split::after{content:"";position:sticky;top:45vh;display:block;margin:45vh auto 0;width:4px;height:44px;border-radius:4px;background:var(--faint);opacity:.55}
+.split:hover::after,.split.drag::after,.split:focus-visible::after{background:var(--accent);opacity:1}
+/* 右：AIチャット */
+.aipane{display:none;min-width:0}
+.ai-in{display:flex;flex-direction:column;gap:10px;height:100%;padding:18px 16px}
+.ai-in .ai-head{margin:0}
+.ai-in .chat{flex:1;min-height:0;max-height:none;margin:0}
+.ai-empty{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;color:var(--muted);font-size:13.5px;padding:8px}
+.ai-empty b{color:var(--fg);font-size:15px}
+.ai-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+@media (min-width:860px){
+  .split{display:block}
+  .aipane{display:block;position:sticky;top:0;height:100vh;
+    background:var(--glass);backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);border-left:1px solid var(--line)}
+  .ai-in{padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (max-width:859px){
+  .aipane{display:block;position:fixed;inset:0;z-index:40;background:var(--bg)}
+  .ai-in{padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+    padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
 .side .spacer{flex:1}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
@@ -262,9 +290,12 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 </head>
 <body>
 
-<div class="app">
+<div class="app" id="app">
   <nav class="side" id="side"></nav>
+  <div class="split" id="splitL" data-split="left" role="separator" aria-orientation="vertical" aria-label="メニューの幅を変える" tabindex="0"></div>
   <main id="main"></main>
+  <div class="split" id="splitR" data-split="right" role="separator" aria-orientation="vertical" aria-label="AIチャットの幅を変える" tabindex="0"></div>
+  <aside class="aipane" id="aipane" aria-label="AIチャット"></aside>
 </div>
 <nav class="tabbar" id="tabbar"></nav>
 <button class="fab" id="fab" data-act="add" aria-label="追加"></button>
@@ -309,6 +340,9 @@ const I={
   l:'<path d="m15 5-7 7 7 7"/>', r:'<path d="m9 5 7 7-7 7"/>',
   light:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   dark:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  side:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/>',
+  chat:'<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/><path d="M8.5 9.5h7M8.5 12.5h4"/>',
   auto:'<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor"/>'
 };
 const THEMES=[['auto','自動'],['light','ライト'],['dark','ダーク']];
@@ -396,11 +430,16 @@ function defaultLaunch(){return [
 if(!S.launcher){S.launcher=defaultLaunch()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
-let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false};
+const MQ=window.matchMedia('(min-width:860px)');
+const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
+let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
+function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
-function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px"><button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
+function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}<button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
 function seg(g,opts,cur){return `<div class="seg" role="tablist">${opts.map(([k,l])=>`<button class="${k===cur?'on':''}" data-act="seg" data-g="${g}" data-k="${k}">${l}</button>`).join('')}</div>`}
 function sortItems(a){return [...a].sort((x,y)=>{
   const rx=x.kind==='event'?(x.time?0:1):2,ry=y.kind==='event'?(y.time?0:1):2;
@@ -466,23 +505,24 @@ function vHome(){
       <div class="card"><div class="card-h"><h2>やること（1週間以内）</h2><span class="pill">${todo.length}件</span></div>
         ${todo.length?todo.map(i=>rowItem(i,{date:true})).join(''):'<div class="empty">片付いてる！</div>'}</div>
     </div>
-    ${aiCard()}
   </div>`;
 }
-function aiCard(){
+function aiPane(){
   const on=!!S.settings.apiKey;
-  return `<div class="card ai" id="aiCard">
-    <div class="ai-head"><span class="spark">✦</span><h2>AIチャット</h2><span class="pill ${on?'ok':''}">${on?'Gemini 接続済み':'未接続（ルールで回答）'}</span>
-      <div style="margin-left:auto;display:flex;gap:12px;align-items:center">${ui.chat.length?'<button class="link" data-act="chatClear">クリア</button>':''}<button class="btn sm sub" data-act="toClaude" title="データと質問をコピーしてClaudeを開く">Claudeで続ける</button></div></div>
+  return `<div class="ai-in">
+    <div class="ai-head"><span class="spark">✦</span><h2>AIチャット</h2><span class="pill ${on?'ok':''}">${on?'Gemini':'未接続'}</span>
+      <button class="paneclose" style="margin-left:auto" data-act="rClose" aria-label="AIチャットを閉じる">${ic('x')}</button></div>
     ${ui.chat.length||ui.aiBusy?`<div class="chat" id="chatBox">${ui.chat.map(m=>m.role==='user'
       ?`<div class="msg me">${esc(m.text)}</div>`
-      :`<div class="msg ai">${m.src?`<div class="src">${esc(m.src)}</div>`:''}${mdLite(m.text)}</div>`).join('')}${ui.aiBusy?'<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>':''}</div>`:''}
-    <div class="ai-quick">
-      <button class="btn sm sub" data-act="ai" data-q="plan">今日の段取りを組む</button>
+      :`<div class="msg ai">${m.src?`<div class="src">${esc(m.src)}</div>`:''}${mdLite(m.text)}</div>`).join('')}${ui.aiBusy?'<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>':''}</div>`
+      :`<div class="ai-empty"><b>何でも相談してね</b>アプリに入っている予定・タスク・案件・実績・シフトを読んだうえで答えるよ。${on?'':'<br>いまはAI未接続なので、下の3つのボタンだけルールで動く。設定からGeminiのAPIキーを入れると自由に質問できる。'}</div>`}
+    <div class="ai-quick" style="margin:0">
+      <button class="btn sm sub" data-act="ai" data-q="plan">今日の段取り</button>
       <button class="btn sm sub" data-act="ai" data-q="week">今週の優先順位</button>
       <button class="btn sm sub" data-act="ai" data-q="miss">抜け漏れチェック</button>
     </div>
-    <div class="ai-input"><textarea id="aiq" rows="1" placeholder="例：明日の研修の流れを30分で組んで">${esc(ui.aiDraft)}</textarea><button class="btn" data-act="ai" data-q="free">送信</button></div>
+    <div class="ai-input"><textarea id="aiq" rows="2" placeholder="例：明日の研修の流れを30分で組んで">${esc(ui.aiDraft)}</textarea><button class="btn" data-act="ai" data-q="free">送信</button></div>
+    <div class="ai-foot"><button class="link" data-act="toClaude">Claudeで続ける</button>${ui.chat.length?'<button class="link" style="color:var(--muted)" data-act="chatClear">会話をクリア</button>':''}</div>
   </div>`;
 }
 function launcherCard(){
@@ -575,7 +615,9 @@ function vSet(){
   return `${hdr('設定','AI連携とデータ')}<div class="stack">
   <div class="card setrow"><h2>表示</h2>
     <div class="small muted">自動はiPadの設定（ライト／ダーク）に合わせる。右上のボタンでも切り替えられる。</div>
-    <div>${THEMES.map(([k,l])=>`<button class="chip ${theme===k?'on':''}" style="margin-right:6px" data-act="theme" data-k="${k}">${l}</button>`).join('')}</div></div>
+    <div>${THEMES.map(([k,l])=>`<button class="chip ${theme===k?'on':''}" style="margin-right:6px" data-act="theme" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="small muted">iPadの横画面では「メニュー｜メイン｜AIチャット」の3列。仕切りをドラッグで幅を変更、ダブルタップで元の幅。各列は右上のボタンで閉じられる。</div>
+    <div><button class="btn sm sub" data-act="resetLayout">レイアウトを元に戻す</button></div></div>
   <div class="card setrow"><h2>AI連携（Gemini・無料枠）</h2>
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
     <label class="f"><span>APIキー</span><input id="s_key" type="password" autocomplete="off" value="${esc(S.settings.apiKey)}" placeholder="AIza…"></label>
@@ -757,11 +799,44 @@ function toClaude(){
 const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,set:vSet};
 function render(){
   document.getElementById('main').innerHTML=VIEWS[ui.view]();
-  document.getElementById('side').innerHTML=`<div class="brand">ぶっちー <span style="color:var(--accent)">WORK</span><small>NEW KOOKY / ARKZOO / 個人</small></div>`+
+  document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand">ぶっちー <span style="color:var(--accent)">WORK</span><small>NEW KOOKY / ARKZOO / 個人</small></div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
     NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${l}${AREAS[k]?`<span class="dot" style="--c:${AREAS[k].c}"></span>`:''}</button>`).join('');
   document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${l}</span></button>`).join('');
   document.getElementById('fab').innerHTML=ic('plus');
   document.getElementById('fab').hidden=ui.view==='set';
+  document.getElementById('aipane').innerHTML=aiPane();
+  applyLayout();scrollChat();
+}
+function applyLayout(){
+  const wide=MQ.matches,app=document.getElementById('app');
+  if(wide){
+    const W=window.innerWidth;
+    if(LAY.lOpen&&LAY.rOpen&&LAY.lw+LAY.rw>W-380)LAY.rw=Math.max(280,W-380-LAY.lw);
+    app.style.gridTemplateColumns=[LAY.lOpen?LAY.lw+'px':'',LAY.lOpen?'6px':'','minmax(0,1fr)',LAY.rOpen?'6px':'',LAY.rOpen?LAY.rw+'px':''].filter(Boolean).join(' ');
+  }else app.style.gridTemplateColumns='';
+  document.getElementById('side').hidden=wide&&!LAY.lOpen;
+  document.getElementById('splitL').hidden=!wide||!LAY.lOpen;
+  document.getElementById('splitR').hidden=!wide||!LAY.rOpen;
+  document.getElementById('aipane').hidden=wide?!LAY.rOpen:!ui.aiMobile;
+  document.getElementById('fab').style.right=wide&&LAY.rOpen?(LAY.rw+30)+'px':'';
+}
+function initSplit(){
+  document.querySelectorAll('.split').forEach(sp=>{
+    const left=sp.dataset.split==='left';
+    const setW=x=>{const W=window.innerWidth;
+      if(left)LAY.lw=clamp(x,160,Math.min(380,W-(LAY.rOpen?LAY.rw:0)-380));
+      else LAY.rw=clamp(x,280,Math.min(760,W-(LAY.lOpen?LAY.lw:0)-380));applyLayout()};
+    sp.addEventListener('pointerdown',e=>{
+      e.preventDefault();sp.setPointerCapture(e.pointerId);sp.classList.add('drag');document.body.style.userSelect='none';
+      const move=ev=>setW(left?ev.clientX:window.innerWidth-ev.clientX);
+      const up=()=>{sp.removeEventListener('pointermove',move);sp.removeEventListener('pointerup',up);sp.removeEventListener('pointercancel',up);
+        sp.classList.remove('drag');document.body.style.userSelect='';saveLay()};
+      sp.addEventListener('pointermove',move);sp.addEventListener('pointerup',up);sp.addEventListener('pointercancel',up);
+    });
+    sp.addEventListener('dblclick',()=>{if(left)LAY.lw=LAY_DEF.lw;else LAY.rw=LAY_DEF.rw;applyLayout();saveLay()});
+    sp.addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;e.preventDefault();
+      const d=(e.key==='ArrowRight'?16:-16);if(left)setW(LAY.lw+d);else setW(LAY.rw-d);saveLay()});
+  });
 }
 let toastT;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,1800)}
@@ -777,6 +852,11 @@ const ACT={
   swk0:()=>{ui.shiftWeek=mondayOf(TODAY);render()},
   past:()=>{ui.past=!ui.past;render()},
   lEdit:()=>{ui.lEdit=!ui.lEdit;render()},
+  lClose:()=>{LAY.lOpen=false;saveLay();render()},
+  lOpen:()=>{LAY.lOpen=true;saveLay();render()},
+  rClose:()=>{if(MQ.matches){LAY.rOpen=false;saveLay()}else ui.aiMobile=false;render()},
+  rOpen:()=>{if(MQ.matches){LAY.rOpen=true;saveLay()}else ui.aiMobile=true;render();setTimeout(()=>document.getElementById('aiq')?.focus(),60)},
+  resetLayout:()=>{LAY={...LAY_DEF};saveLay();render();toast('レイアウトを元に戻した')},
   addLaunch:()=>launchSheet(),
   editLaunch:el=>launchSheet(byId(S.launcher,el.dataset.id)),
   chatClear:()=>{ui.chat=[];render()},
@@ -841,6 +921,9 @@ document.addEventListener('submit',e=>{
   closeSheet();commit('保存した');
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetCb)closeSheet()});
+initSplit();
+if(MQ.addEventListener)MQ.addEventListener('change',()=>{ui.aiMobile=false;render()});
+window.addEventListener('resize',()=>{if(MQ.matches)applyLayout()});
 render();
 </script>
 </body>
