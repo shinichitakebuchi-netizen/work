@@ -280,6 +280,11 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .grid.ks tbody th.sun{color:var(--danger)}.grid.ks tbody th.sat{color:var(--genba)}
 .grid.ks tr.today th,.grid.ks tr.today td{box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
 .grid.ks td.cnt{text-align:center;font-weight:800}
+.grid.ks td.kc.on{background:color-mix(in srgb,var(--genba) 16%,transparent);color:var(--genba)}
+.tlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.trow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--seg);min-width:0}
+.trow b{flex:none}
+.tstore{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .embed{padding:0;overflow:hidden}
 .embed iframe{display:block;width:100%;height:60vh;min-height:300px;border:0;background:#fff}
 html,body{overscroll-behavior:none}
@@ -487,7 +492,7 @@ const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
 let LAY={...LAY_DEF};try{Object.assign(LAY,JSON.parse(localStorage.getItem(KEY+'_layout')||'{}'))}catch(e){}
 function saveLay(){try{localStorage.setItem(KEY+'_layout',JSON.stringify(LAY))}catch(e){}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0}};
+let ui={view:'home',seg:{genba:'deal',nk:'shift'},sel:TODAY,week:mondayOf(TODAY),shiftWeek:mondayOf(TODAY),dealF:'open',past:false,aiBusy:false,aiDraft:'',chat:[],lEdit:false,aiMobile:false,sh:{list:[],values:[],formulas:[]},emb:'',ks:{data:null,month:'this',pending:{},busy:false,err:'',at:0},st:{data:null,edit:null,busy:false,err:'',at:0,newStore:''},td:{data:null,busy:false,err:'',at:0}};
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
@@ -544,6 +549,7 @@ function vHome(){
       <div class="card stat"><div class="lab">進行中の案件</div><div class="val">${openDeals.length}<small>件</small></div></div>
       <div class="card stat"><div class="lab">今月の実績 達成率</div><div class="val">${rate}<small>%</small></div><div class="small ${rate>=pace?'':'short'}" style="font-weight:700">${rate>=pace?'ペース通り':'ペースより遅れ'}（月の経過 ${pace}%）</div></div>
     </div>
+    ${todayCard()}
     <div class="card">
       <div class="week">
         <button class="navarrow" data-act="wk" data-d="-7" aria-label="前の週">${ic('l')}</button>
@@ -658,10 +664,12 @@ function vNk(){
     body=`<div class="toolbar"><span class="muted small">今月から12か月分</span><button class="btn sm" data-act="addYear">${ic('plus')}予定を追加</button></div>
     <div class="months">${[...Array(12)].map((_,k)=>{const mo=mAdd(k);const its=S.yearplan.filter(y=>y.month===mo);
       return `<div class="card mon ${k===0?'now':''}"><h3>${mo}月${k===0?'<span class="pill accent">今月</span>':''}</h3>${its.length?its.map(y=>`<div class="row" data-act="editYear" data-id="${y.id}"><button class="chk ${y.done?'on':''}" style="margin:0" data-act="yToggle" data-id="${y.id}" aria-label="完了">${ic('check')}</button><div class="rbody"><div class="rtitle ${y.done?'struck':''}">${esc(y.title)}</div></div></div>`).join(''):'<div class="small" style="color:var(--faint);padding:6px 0">—</div>'}</div>`}).join('')}</div>`;
+  }else if(s==='store'){
+    body=storeView();
   }else if(s==='gas'){
     body=embedView();
   }else body=areaList('nk');
-  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['ads','広告'],['year','年間'],['todo','予定'],['gas','GASアプリ']],s)}${body}</div>`;
+  return `${hdr(esc(AREAS.nk.name),esc(AREAS.nk.full))}<div class="stack">${seg('nk',[['shift','シフト'],['store','店舗'],['ads','広告'],['year','年間'],['todo','予定'],['gas','GASアプリ']],s)}${body}</div>`;
 }
 
 /* ===== ARKZOO / 個人 ===== */
@@ -941,6 +949,56 @@ async function ksSave(){
   await loadKintai();
 }
 
+/* ===== 店舗設定（担当店舗）の編集 ===== */
+async function loadStores(){
+  ui.st.busy=true;ui.st.err='';render();
+  try{const j=await bridge('kintai',{action:'stores'});ui.st.data={allStores:j.allStores||[],staff:j.staff||[]};ui.st.edit=JSON.parse(JSON.stringify(ui.st.data));ui.st.at=Date.now()}
+  catch(e){ui.st.err=e.message}
+  ui.st.busy=false;render();
+}
+function stDirty(){return ui.st.edit&&JSON.stringify(ui.st.edit)!==JSON.stringify(ui.st.data)}
+function storeView(){
+  if(!S.conn.kintai.url)return `<div class="card"><div class="empty">勤怠アプリとまだつながっていないよ。設定 →「連携」→「勤怠アプリ」で入れてね。</div></div>`;
+  const E=ui.st.edit,dirty=stDirty();
+  const bar=`<div class="toolbar"><span class="small muted">誰がどの店舗を担当するか（勤怠報告の店舗選択に使われる）</span>
+    <div style="display:flex;gap:8px">${dirty?'<button class="btn sm sub" data-act="stUndo">取り消し</button>':''}<button class="btn sm ${dirty?'':'sub'}" data-act="${dirty?'stSave':'stReload'}">${ui.st.busy?'通信中…':dirty?'保存':'再読み込み'}</button></div></div>`;
+  if(ui.st.err)return bar+`<div class="card"><div class="empty short">${esc(ui.st.err)}</div></div>`;
+  if(!E)return bar+`<div class="card"><div class="empty">${ui.st.busy?'勤怠アプリから読み込み中…':'読み込んでいないよ'}</div></div>`;
+  return bar+`<div class="card setrow"><h2>店舗リスト</h2>
+      <div class="chips">${E.allStores.map((st,i)=>`<span class="chip on" style="display:inline-flex;gap:6px;align-items:center">${esc(st)}<button data-act="stDel" data-i="${i}" aria-label="${esc(st)}を削除" style="color:inherit;opacity:.7">×</button></span>`).join('')}</div>
+      <div class="ai-input"><input id="st_new" class="f" style="flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg)" placeholder="店舗名を入力して追加" value="${esc(ui.st.newStore)}"><button class="btn sm" data-act="stAdd">追加</button></div>
+      <div class="small muted">店舗を消すと、その店舗の担当もみんな外れる。</div></div>
+    <div class="card" style="padding:10px"><div class="small muted" style="margin:0 4px 8px">マスをタップで担当のオン／オフ。最後に「保存」。</div>
+      <div class="tablewrap sheetwrap" data-fit><table class="grid ks"><thead><tr><th>店舗</th>${E.staff.map(p=>`<th>${esc(p.name)}</th>`).join('')}</tr></thead><tbody>
+      ${E.allStores.map(st=>`<tr><th style="text-align:left">${esc(st)}</th>${E.staff.map((p,pi)=>{const on=p.stores.includes(st);return `<td class="kc ${on?'on':''}" data-act="stCell" data-p="${pi}" data-s="${esc(st)}">${on?'担当':''}</td>`}).join('')}</tr>`).join('')}
+      </tbody></table></div></div>`;
+}
+async function stSave(){
+  ui.st.busy=true;render();
+  try{await bridge('kintai',{action:'saveStores',allStores:ui.st.edit.allStores,staff:ui.st.edit.staff},true);toast('店舗設定を保存した');ui.st.at=0;await loadStores()}
+  catch(e){ui.st.busy=false;render();toast('保存できなかった：'+e.message)}
+}
+
+/* ===== 今日の出勤（ホーム） ===== */
+async function loadToday(){
+  if(ui.td.busy||!S.conn.kintai.url)return;
+  ui.td.busy=true;ui.td.err='';
+  try{const j=await bridge('kintai',{action:'today'});ui.td.data=j;ui.td.at=Date.now()}catch(e){ui.td.err=e.message}
+  ui.td.busy=false;if(ui.view==='home')render();
+}
+const STATE_C={'未報告':'var(--danger)','出発済':'var(--genba)','出勤済':'var(--ok)','実績済':'var(--ok)','退勤済':'var(--muted)'};
+function todayCard(){
+  if(!S.conn.kintai.url)return '';
+  const d=ui.td.data;
+  const head=`<div class="card-h"><h2>今日の出勤${d?`<span class="small muted" style="font-weight:600;margin-left:8px">${esc(d.label)}</span>`:''}</h2><button class="link" data-act="tdReload">${ui.td.busy?'読み込み中…':'更新'}</button></div>`;
+  if(ui.td.err&&!d)return `<div class="card">${head}<div class="empty short">${esc(ui.td.err)}</div></div>`;
+  if(!d)return `<div class="card">${head}<div class="empty">勤怠アプリから読み込み中…</div></div>`;
+  const on=d.staff.filter(x=>x.working),off=d.staff.filter(x=>!x.working);
+  return `<div class="card">${head}
+    <div class="tlist">${on.length?on.map(x=>`<div class="trow"><b>${esc(x.name)}</b><span class="tstore">${esc(x.store)||'<span class="muted">店舗未入力</span>'}</span><span class="pill" style="--c:${STATE_C[x.state]||'var(--muted)'}">${esc(x.state)}</span></div>`).join(''):'<div class="empty">今日の出勤者はいないよ</div>'}</div>
+    ${off.length?`<div class="small muted" style="margin-top:8px">公休：${off.map(x=>esc(x.name)).join('・')}</div>`:''}</div>`;
+}
+
 /* ===== GASアプリ埋め込み ===== */
 function embedView(){
   const E=S.embeds;
@@ -1115,8 +1173,8 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 function commit(msg){save();render();if(msg)toast(msg)}
 
 const ACT={
-  nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;if(ui.view==='nk'&&ui.seg.nk==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)setTimeout(loadKintai,0);try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
-  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets();if(el.dataset.g==='nk'&&el.dataset.k==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)loadKintai()},
+  nav:el=>{if(el.dataset.v==='me'&&S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),0);ui.view=el.dataset.v;ui.past=false;if(ui.view==='home'&&S.conn.kintai.url&&Date.now()-ui.td.at>5*60000)setTimeout(loadToday,0);if(ui.view==='nk'&&ui.seg.nk==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)setTimeout(loadKintai,0);try{localStorage.setItem(KEY+'_view',ui.view)}catch(e){}render();window.scrollTo(0,0)},
+  seg:el=>{ui.seg[el.dataset.g]=el.dataset.k;ui.past=false;render();if(el.dataset.g==='genba'&&el.dataset.k==='sheet'&&S.conn.sheet.url&&!ui.sh.at&&!ui.sh.busy)loadSheets();if(el.dataset.g==='nk'&&el.dataset.k==='store'&&S.conn.kintai.url&&!ui.st.busy&&!stDirty()&&Date.now()-ui.st.at>60000)loadStores();if(el.dataset.g==='nk'&&el.dataset.k==='shift'&&S.conn.kintai.url&&!ui.ks.busy&&Date.now()-ui.ks.at>60000&&!Object.keys(ui.ks.pending).length)loadKintai()},
   pick:el=>{ui.sel=el.dataset.d;ui.week=mondayOf(ui.sel);render()},
   wk:el=>{ui.week=addDays(ui.week,+el.dataset.d);ui.sel=ui.week;render()},
   swk:el=>{ui.shiftWeek=addDays(ui.shiftWeek,+el.dataset.d);render()},
@@ -1152,6 +1210,15 @@ const ACT={
     const sc=document.querySelector('.sheetwrap');const st=sc?sc.scrollTop:0,sl=sc?sc.scrollLeft:0;render();
     const sc2=document.querySelector('.sheetwrap');if(sc2){sc2.scrollTop=st;sc2.scrollLeft=sl}},
   ksSave:()=>ksSave(),
+  stReload:()=>loadStores(),
+  stUndo:()=>{ui.st.edit=JSON.parse(JSON.stringify(ui.st.data));render()},
+  stSave:()=>stSave(),
+  stCell:el=>{const p=ui.st.edit.staff[+el.dataset.p],st=el.dataset.s;const i=p.stores.indexOf(st);if(i>=0)p.stores.splice(i,1);else p.stores.push(st);
+    const sc=document.querySelector('.sheetwrap');const a=sc?sc.scrollTop:0,b=sc?sc.scrollLeft:0;render();const s2=document.querySelector('.sheetwrap');if(s2){s2.scrollTop=a;s2.scrollLeft=b}},
+  stAdd:()=>{const v=(document.getElementById('st_new')?.value||'').trim();if(!v){toast('店舗名を入れてね');return}
+    if(ui.st.edit.allStores.includes(v)){toast('もうあるよ');return}ui.st.edit.allStores.push(v);ui.st.newStore='';render()},
+  stDel:el=>{const st=ui.st.edit.allStores[+el.dataset.i];ui.st.edit.allStores.splice(+el.dataset.i,1);ui.st.edit.staff.forEach(p=>{p.stores=p.stores.filter(x=>x!==st)});render()},
+  tdReload:()=>{ui.td.at=0;loadToday()},
   ksReload:()=>loadKintai(),
   ksUndo:()=>{ui.ks.pending={};render()},
   embBulk:()=>embBulkSheet(),
@@ -1212,7 +1279,7 @@ document.addEventListener('change',e=>{
   if(t==='adNext'){const a=byId(S.ads,el.dataset.id);if(a){a.next=el.value;commit()}}
   if(t==='import'){const file=el.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o.items)throw 0;S=o;if(!S.names)S.names={app:'WORK'};if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};if(!S.embeds)S.embeds=[];if(!S.gcal)S.gcal={at:0,events:[]};if(!S.conn.kintai)S.conn.kintai={url:'',token:''};if(!S.launcher)S.launcher=defaultLaunch();applyNames();commit('読み込んだ')}catch(err){toast('このファイルは読み込めなかった')}};rd.readAsText(file)}
 });
-document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value});
+document.addEventListener('input',e=>{if(e.target.id==='aiq')ui.aiDraft=e.target.value;if(e.target.id==='st_new')ui.st.newStore=e.target.value});
 document.addEventListener('keydown',e=>{
   if(e.target.id!=='aiq'||e.key!=='Enter'||e.shiftKey)return;
   if(e.isComposing||e.keyCode===229)return;
@@ -1225,6 +1292,7 @@ document.addEventListener('submit',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetCb)closeSheet()});
 initSplit();
+if(S.conn.kintai.url&&ui.view==='home')setTimeout(loadToday,200);
 if(S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),300);
 if(MQ.addEventListener)MQ.addEventListener('change',()=>{ui.aiMobile=false;render()});
 window.addEventListener('resize',()=>{if(MQ.matches)applyLayout();fitPanels()});
