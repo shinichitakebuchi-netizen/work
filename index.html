@@ -312,6 +312,12 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:13px;font-variant
 .bcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .bwh{text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);padding:2px 0}
 .bday{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:72px;padding:6px 7px;border-radius:12px;background:var(--seg);text-align:left;min-width:0}
+.bday{position:relative;overflow:hidden}
+.bday.tr{background:color-mix(in srgb,var(--pc) 13%,var(--seg))}
+.bparts{display:flex;gap:4px;flex-wrap:wrap;font-size:10.5px;line-height:1.2}
+.bparts b{font-weight:800}
+.pbar{position:absolute;left:0;right:0;top:0;height:4px;display:flex}
+.pbar i{flex:1}
 .bday.out{opacity:.4}.bday.today{outline:2px solid var(--accent);outline-offset:-2px}
 .bday.ovr{box-shadow:inset 0 0 0 1px var(--accent)}
 .bday .bn{font-family:var(--num);font-weight:800;font-size:14px}
@@ -1111,6 +1117,8 @@ function embSheet(x){
 
 /* ===== ボディメイク ===== */
 const BPARTS=['胸','肩','腕','背中','脚','腹','全身','その他'];
+const BPART_C={'胸':'var(--accent)','肩':'var(--nk)','腕':'var(--me)','背中':'var(--genba)','脚':'var(--ark)','腹':'var(--danger)','全身':'var(--fg)','その他':'var(--muted)'};
+function bParts(t){const c={};t.forEach(x=>{const p=x.part||'その他';c[p]=(c[p]||0)+(+x.sets||1)});return Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[0])}
 const BMEALS=[['b','朝'],['l','昼'],['d','夜'],['s','間食']];
 const BRANGES=[['w','週'],['m','月'],['q','3か月'],['a','全期間']];
 const BLIB_DEF=[['胸','ベンチプレス'],['胸','ダンベルベンチプレス'],['胸','ダンベルフライ'],['肩','ショルダープレス'],['肩','サイドレイズ'],['腕','アームカール'],['腕','トライセプスエクステンション'],
@@ -1292,10 +1300,13 @@ function bCalView(){
       const past=d<TODAY&&(!B().goal.startDate||d>=B().goal.startDate);
       const tc=!tn?'rest':td===tn?'ok':td?'part':past?'miss':'plan';
       const mc=!mk.length?'':md===mk.length?'ok':md?'part':past?'miss':'plan';
-      return `<button class="bday ${inM?'':'out'} ${d===TODAY?'today':''} ${B().over[d]?'ovr':''}" data-act="bDay" data-d="${d}">
+      const parts=bParts(p.t),pc=parts.length?BPART_C[parts[0]]||'var(--muted)':'';
+      return `<button class="bday ${inM?'':'out'} ${d===TODAY?'today':''} ${B().over[d]?'ovr':''} ${parts.length?'tr':''}" ${pc?`style="--pc:${pc}"`:''} data-act="bDay" data-d="${d}">
         <span class="bn">${+d.slice(8)}</span>${+lg.w?`<span class="bw">${lg.w}</span>`:''}
+        ${parts.length?`<span class="bparts">${parts.slice(0,3).map(x=>`<b style="color:${BPART_C[x]}">${x}</b>`).join('')}</span><span class="pbar">${parts.map(x=>`<i style="background:${BPART_C[x]}"></i>`).join('')}</span>`:''}
         <span class="bdots">${tn?`<i class="t ${tc}" title="トレーニング"></i>`:'<em>休</em>'}${mc?`<i class="m ${mc}" title="食事"></i>`:''}</span></button>`}).join('')}</div>
-    <div class="blegend small muted"><span><i class="t ok"></i>トレ完了</span><span><i class="t part"></i>一部</span><span><i class="t miss"></i>未実施</span><span><i class="m ok"></i>食事OK</span><span>休＝休養日</span><span><b style="color:var(--accent)">●</b>枠＝その日だけメニュー変更</span></div></div>`;
+    <div class="blegend small muted">${BPARTS.filter(p=>Object.values(B().plan).concat(Object.values(B().over)).some(P=>P.t.some(x=>(x.part||'その他')===p))).map(p=>`<span><i style="background:${BPART_C[p]}"></i>${p}</span>`).join('')}</div>
+    <div class="blegend small muted" style="margin-top:4px"><span><i class="t ok"></i>トレ完了</span><span><i class="t part"></i>一部</span><span><i class="t miss"></i>未実施</span><span><i class="m ok"></i>食事OK</span><span>休＝休養日</span><span><b style="color:var(--accent)">●</b>枠＝その日だけメニュー変更</span></div></div>`;
 }
 function bTrendView(){
   const st=bStatus();
