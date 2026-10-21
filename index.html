@@ -248,17 +248,18 @@ table.shift{border-collapse:separate;border-spacing:4px;min-width:540px;width:10
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.typing i{animation:none}}
 
-.lbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:flex;align-items:center;gap:4px;overflow-x:auto;
+.lbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:flex;align-items:center;gap:6px;
   margin:-6px 0 16px;padding:6px 8px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);
   background:var(--glass-strong);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);scrollbar-width:none}
-.lbar::-webkit-scrollbar{display:none}
+.lscroll{flex:1;min-width:0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lscroll::-webkit-scrollbar{display:none}
 .lt{flex:none;width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0;text-decoration:none;color:var(--fg);border-radius:10px}
 .lt:hover{background:var(--seg)}
 .lt .lic{width:34px;height:34px;border-radius:10px;font-size:11.5px}
 .lt .lic.add svg{width:16px;height:16px}
 .lt .lnm{font-size:10px;max-width:56px}
 .lt.edit .lic{animation:jig .3s ease-in-out infinite alternate}
-.lbar-edit{flex:none;margin-left:auto;min-width:34px;height:34px;padding:0 8px;border-radius:10px;display:grid;place-items:center;color:var(--muted);font-weight:700;font-size:13px;position:sticky;right:0;background:var(--glass-strong)}
+.lbar-edit{flex:none;margin-left:auto;min-width:34px;height:34px;padding:0 8px;border-radius:10px;display:grid;place-items:center;color:var(--muted);font-weight:700;font-size:13px;border-left:1px solid var(--line);border-radius:0 10px 10px 0;padding-left:10px}
 .lbar-edit svg{width:17px;height:17px}
 .lbar-edit.on{color:var(--on-accent);background:var(--accent)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -451,7 +452,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r
 let S=load();
 const LCOLORS=[['var(--accent)','オレンジ'],['var(--genba)','ブルー'],['var(--nk)','アンバー'],['var(--ark)','ティール'],['var(--me)','ラベンダー'],['var(--fg)','ネイビー']];
 function defaultLaunch(){return [
-  {id:uid(),name:'Gmail',url:'https://mail.google.com/',color:'var(--accent)'},
+  {id:uid(),name:'Gmail',url:'googlegmail://',color:'var(--accent)'},
   {id:uid(),name:'カレンダー',url:'https://calendar.google.com/',color:'var(--genba)'},
   {id:uid(),name:'スプレッドシート',url:'https://docs.google.com/spreadsheets/',color:'var(--ark)'},
   {id:uid(),name:'ドライブ',url:'https://drive.google.com/',color:'var(--nk)'},
@@ -461,6 +462,7 @@ function defaultLaunch(){return [
   {id:uid(),name:'Instagram',url:'https://www.instagram.com/',color:'var(--me)'}
 ]}
 if(!S.launcher){S.launcher=defaultLaunch()}
+S.launcher.forEach(a=>{if(a.url==='https://mail.google.com/')a.url='googlegmail://'});
 if(!S.names)S.names={app:'WORK'};
 if(!S.conn)S.conn={sheet:{url:'',token:'',open:''},cal:{url:'',token:''}};
 if(!S.embeds)S.embeds=[];
@@ -574,12 +576,13 @@ function aiPane(){
 }
 function launcherBar(){
   const L=S.launcher||[];
-  return `<div class="lbar" role="toolbar" aria-label="よく使うアプリ">${L.map(a=>{
-      const inner=`<span class="lic" style="--c:${a.color}">${esc([...a.name].slice(0,2).join(''))}</span><span class="lnm">${esc(a.name)}</span>`;
-      if(ui.lEdit)return `<button class="lt edit" data-act="editLaunch" data-id="${a.id}" title="${esc(a.name)}を編集">${inner}</button>`;
-      const web=/^https?:/i.test(a.url);
-      return `<a class="lt" href="${esc(a.url)}" title="${esc(a.name)}" ${web?'target="_blank" rel="noopener"':''}>${inner}</a>`}).join('')}
-    ${ui.lEdit?`<button class="lt" data-act="addLaunch" title="アプリを追加"><span class="lic add">${ic('plus')}</span><span class="lnm">追加</span></button>`:''}
+  const tiles=L.map(a=>{
+    const inner=`<span class="lic" style="--c:${a.color}">${esc([...a.name].slice(0,2).join(''))}</span><span class="lnm">${esc(a.name)}</span>`;
+    if(ui.lEdit)return `<button class="lt edit" data-act="editLaunch" data-id="${a.id}" title="${esc(a.name)}を編集">${inner}</button>`;
+    const web=/^https?:/i.test(a.url);
+    return `<a class="lt" href="${esc(a.url)}" title="${esc(a.name)}" ${web?'target="_blank" rel="noopener"':''}>${inner}</a>`}).join('');
+  const add=ui.lEdit?`<button class="lt" data-act="addLaunch" title="アプリを追加"><span class="lic add">${ic('plus')}</span><span class="lnm">追加</span></button>`:'';
+  return `<div class="lbar" role="toolbar" aria-label="よく使うアプリ"><div class="lscroll">${add}${tiles}</div>
     <button class="lbar-edit ${ui.lEdit?'on':''}" data-act="lEdit" aria-label="${ui.lEdit?'編集を終える':'アプリを編集'}">${ui.lEdit?'完了':ic('edit')}</button></div>`;
 }
 
@@ -722,7 +725,7 @@ function openSheet({title,fields,onSave,onDelete,note}){
   let html='',buf=[];
   f.forEach(x=>{if(x.half){buf.push(x.h);if(buf.length===2){html+=`<div class="frow">${buf.join('')}</div>`;buf=[]}}else{if(buf.length){html+=`<div class="frow">${buf.join('')}</div>`;buf=[]}html+=x.h}});
   if(buf.length)html+=`<div class="frow">${buf.join('')}</div>`;
-  document.getElementById('sheet').innerHTML=`<h3>${title}</h3>${note?`<div class="small muted" style="margin:-6px 0 12px">${note}</div>`:''}<form id="sheetForm">${html}
+  document.getElementById('sheet').innerHTML=`<h3>${title}</h3>${note?`<div class="small muted" style="margin:-6px 0 12px">${note}</div>`:''}<form id="sheetForm" novalidate>${html}
     <div class="sheet-actions">${onDelete?'<button type="button" class="btn danger" data-act="sheetDel">削除</button>':''}<div class="r"><button type="button" class="btn sub" data-act="sheetClose">キャンセル</button><button type="submit" class="btn">保存</button></div></div></form>`;
   sheetCb={fields,onSave,onDelete,delArmed:false};
   document.getElementById('sheetWrap').hidden=false;
@@ -775,11 +778,17 @@ function yearSheet(y){
     onSave:o=>{o.month=Number(o.month);if(!o.title)return '内容を入れてね';if(y)Object.assign(y,o);else S.yearplan.push({id:uid(),done:false,...o})},
     onDelete:y?()=>{S.yearplan=S.yearplan.filter(x=>x!==y)}:null});
 }
+const LPRESET=[['','（自分で入力）','',''],
+  ['gm','Gmail（アプリ）','Gmail','googlegmail://'],['gc','Googleカレンダー（アプリ）','カレンダー','googlecalendar://'],
+  ['gs','スプレッドシート（アプリ）','スプシ','googlesheets://'],['gd','ドライブ（アプリ）','ドライブ','googledrive://'],
+  ['ch','Chrome（アプリ）','Chrome','googlechrome://'],['ln','LINE（アプリ）','LINE','line://'],['ig','Instagram（アプリ）','Instagram','instagram://'],
+  ['cl','Claude（Web）','Claude','https://claude.ai/new'],['ge','Gemini（Web）','Gemini','https://gemini.google.com/'],['gh','GitHub（Web）','GitHub','https://github.com/']];
 function launchSheet(a){
   const v=a||{name:'',url:'https://',color:'var(--accent)'};
   openSheet({title:a?'アプリを編集':'アプリを追加',
-    fields:[{k:'name',label:'表示名',val:v.name},
-      {k:'url',label:'開くURL',type:'url',val:v.url,hint:'普段は https:// のURLでOK。アプリを直接開きたい時は、例えば Gmail→googlegmail:// 、LINE→line:// 、Googleカレンダー→googlecalendar:// を試してね（動かない時は https:// に戻す）。'},
+    fields:[{k:'preset',label:'よく使うアプリから選ぶ',type:'select',opts:LPRESET.map(p=>[p[0],p[1]]),val:''},
+      {k:'name',label:'表示名',val:v.name},
+      {k:'url',label:'開くURL',type:'text',val:v.url,hint:'普段は https:// のURLでOK。アプリを直接開きたい時は、例えば Gmail→googlegmail:// 、LINE→line:// 、Googleカレンダー→googlecalendar:// を試してね（動かない時は https:// に戻す）。'},
       {k:'color',label:'色',type:'select',opts:LCOLORS,val:v.color}],
     onSave:o=>{if(!o.name)return '表示名を入れてね';if(!o.url||/^\s*(javascript|data):/i.test(o.url))return 'URLを確認してね';
       if(a)Object.assign(a,o);else S.launcher.push({id:uid(),...o})},
@@ -1131,6 +1140,7 @@ document.addEventListener('click',e=>{
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='f_preset'){const p=LPRESET.find(x=>x[0]===e.target.value);if(p&&p[0]){document.getElementById('f_name').value=p[2];document.getElementById('f_url').value=p[3]}return}
   const el=e.target.closest('[data-change]');if(!el)return;const t=el.dataset.change;
   if(t==='stage'){const d=byId(S.deals,el.dataset.id);if(d){d.stage=el.value;commit(el.value==='成約'?'成約おめでとう！':'')}}
   if(t==='adStatus'){const a=byId(S.ads,el.dataset.id);if(a){a.status=el.value;commit()}}
