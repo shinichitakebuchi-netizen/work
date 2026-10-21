@@ -877,15 +877,25 @@ function embedView(){
   const E=S.embeds;
   const cur=E.find(x=>x.id===ui.emb)||E[0];
   return `<div class="toolbar"><div class="chips">${E.map(x=>`<button class="chip ${cur&&x.id===cur.id?'on':''}" data-act="embPick" data-k="${x.id}">${esc(x.name)}</button>`).join('')}</div>
-    <div style="display:flex;gap:8px">${cur?`<a class="btn sm sub" href="${esc(cur.url)}" target="_blank" rel="noopener">別タブで開く</a><button class="btn sm sub" data-act="embEdit" data-k="${cur.id}">編集</button>`:''}<button class="btn sm" data-act="embAdd">${ic('plus')}アプリを登録</button></div></div>
+    <div style="display:flex;gap:8px">${cur?`<a class="btn sm sub" href="${esc(cur.url)}" target="_blank" rel="noopener">別タブで開く</a><button class="btn sm sub" data-act="embEdit" data-k="${cur.id}">編集</button>`:''}<button class="btn sm sub" data-act="embBulk">勤怠アプリを一括登録</button><button class="btn sm" data-act="embAdd">${ic('plus')}アプリを登録</button></div></div>
     ${cur?`<div class="card embed"><iframe src="${esc(cur.url)}" title="${esc(cur.name)}" loading="lazy"></iframe></div>
       <div class="small muted">真っ白やエラーのときは、GAS側に埋め込み許可の1行が必要（設定の「連携」に説明あり）。それでもダメなら「別タブで開く」を使ってね。</div>`
       :`<div class="card"><div class="empty">勤怠管理やシフト管理など、GASで作ったアプリのURL（…/exec）を登録すると、ここに埋め込んで使えるよ。</div></div>`}`;
 }
+const KINTAI_PAGES=[['勤怠報告',''],['実績入力','jisseki'],['公休確認','koukyu'],['公休編集','koukyuedit'],['シフト一覧','shift'],['アラート設定','alert'],['店舗管理','store']];
+function embBulkSheet(){
+  openSheet({title:'勤怠アプリを一括登録',note:'勤怠アプリのURL（…/exec）を1回貼るだけで、7つの画面をまとめて登録する。',
+    fields:[{k:'url',label:'勤怠アプリのURL（…/exec まで）',type:'url',val:''}],
+    onSave:o=>{const base=o.url.replace(/\s+/g,'').replace(/[?#].*$/,'');
+      if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(base))return '…/exec で終わるURLを貼ってね';
+      let added=0;KINTAI_PAGES.forEach(([n,p])=>{const url=p?base+'?page='+p:base;if(!S.embeds.some(x=>x.url===url)){S.embeds.push({id:uid(),name:n,url});added++}});
+      const sh=S.embeds.find(x=>x.url===base+'?page=shift');if(sh)ui.emb=sh.id;
+      setTimeout(()=>toast(added+'画面を登録した'),0)}});
+}
 function embSheet(x){
   const v=x||{name:'',url:''};
   openSheet({title:x?'GASアプリを編集':'GASアプリを登録',fields:[{k:'name',label:'表示名',val:v.name},{k:'url',label:'ウェブアプリのURL',type:'url',val:v.url,hint:'GASの「デプロイを管理」に出ている、…/exec で終わるURL'}],
-    onSave:o=>{if(!o.name)return '表示名を入れてね';if(!/^https:\/\//.test(o.url))return 'https:// で始まるURLを入れてね';
+    onSave:o=>{o.url=o.url.replace(/\s+/g,'');if(!o.name)return '表示名を入れてね';if(!/^https:\/\//.test(o.url))return 'https:// で始まるURLを入れてね';
       if(x)Object.assign(x,o);else{const n={id:uid(),...o};S.embeds.push(n);ui.emb=n.id}},
     onDelete:x?()=>{S.embeds=S.embeds.filter(y=>y!==x);ui.emb=''}:null});
 }
@@ -1048,6 +1058,7 @@ const ACT={
   cell:el=>cellSheet(+el.dataset.r,+el.dataset.c),
   embPick:el=>{ui.emb=el.dataset.k;render()},
   embAdd:()=>embSheet(),
+  embBulk:()=>embBulkSheet(),
   embEdit:el=>embSheet(S.embeds.find(x=>x.id===el.dataset.k)),
   connTest:async el=>{const k=el.dataset.k;readConn();save();el.textContent='確認中…';
     try{const j=await bridge(k,{action:'ping'});toast('つながった：'+(j.me||'OK'));if(k==='cal')syncCal(false)}catch(e){toast('つながらない：'+e.message)}
