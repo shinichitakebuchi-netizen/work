@@ -407,6 +407,42 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .setrow{display:flex;flex-direction:column;gap:10px}
 .kbd{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--seg);padding:1px 6px;border-radius:6px}
 *{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+
+/* ===== スマホ表示の調整 ===== */
+.card-h{flex-wrap:wrap}
+.tab span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:600px){
+  h1{font-size:22px;line-height:1.25}
+  .top{align-items:center;margin-bottom:14px}
+  .top .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top>div:first-child{flex:1;min-width:0}
+  .iconbtn{width:36px;height:36px}.iconbtn svg{width:18px;height:18px}
+  .thbtn{display:none}
+  .tab{font-size:9.5px;letter-spacing:-.02em}
+  .tab svg{width:22px;height:22px}
+  .card{padding:14px;border-radius:18px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .stat .val{font-size:26px}
+  .frow{grid-template-columns:minmax(0,1fr)}
+  .frow.keep2,.frow:has(input[type=date])+.frow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .bgrid{grid-template-columns:minmax(0,1fr)}
+  .bsum .big{font-size:22px}
+  .bday{min-height:62px;padding:5px;border-radius:10px}
+  .bday .bn{font-size:12.5px}.bday .bw{font-size:10.5px}.bparts{font-size:9.5px}
+  .bcal{gap:3px}
+  .titem{padding:10px}
+  .tname{width:100%}
+  .tin{width:100%;justify-content:space-between}
+  .tin input{width:54px}
+  .tin label span{white-space:nowrap}
+  .mrow{grid-template-columns:minmax(0,1fr) 84px;gap:8px}
+  .seg button{padding:7px 11px;font-size:13px}
+  .lbar{margin-bottom:12px}
+  .deals,.ads,.months{grid-template-columns:minmax(0,1fr)}
+  .toolbar{gap:8px}
+  .sheet{max-height:92vh}
+  .bmeal{grid-template-columns:64px minmax(0,1fr) 70px!important;gap:6px}
+}
 </style>
 </head>
 <body>
@@ -584,7 +620,7 @@ let ui={view:'home',seg:{genba:'deal',nk:'shift',body:'cal'},sel:TODAY,week:mond
 try{const v=localStorage.getItem(KEY+'_view');if(v&&NAV.some(n=>n[0]===v))ui.view=v}catch(e){}
 
 /* ===== 共通パーツ ===== */
-function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}${ui.view!=='set'?`<button class="iconbtn addbtn" data-act="add" aria-label="追加">${ic('plus')}</button>`:''}<button class="iconbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
+function hdr(title,sub){return `<header class="top"><div style="min-width:0"><div class="eyebrow">${sub}</div><h1>${title}</h1></div><div style="display:flex;gap:8px">${MQ.matches&&!LAY.lOpen?`<button class="iconbtn" data-act="lOpen" aria-label="メニューを開く">${ic('side')}</button>`:''}${!MQ.matches||!LAY.rOpen?`<button class="iconbtn" data-act="rOpen" aria-label="AIチャットを開く" style="color:var(--accent)">${ic('chat')}</button>`:''}${ui.view!=='set'?`<button class="iconbtn addbtn" data-act="add" aria-label="追加">${ic('plus')}</button>`:''}<button class="iconbtn thbtn" data-act="themeCycle" aria-label="表示：${THEMES.find(t=>t[0]===theme)[1]}（タップで切り替え）" title="表示：${THEMES.find(t=>t[0]===theme)[1]}">${ic(theme)}</button><button class="iconbtn only-narrow" data-act="nav" data-v="set" aria-label="設定">${ic('set')}</button></div></header>`}
 function seg(g,opts,cur){return `<div class="seg" role="tablist">${opts.map(([k,l])=>`<button class="${k===cur?'on':''}" data-act="seg" data-g="${g}" data-k="${k}">${l}</button>`).join('')}</div>`}
 function gItems(){return (S.gcal&&S.gcal.events||[]).map(e=>({id:'g_'+e.gid,gid:e.gid,area:'me',kind:'event',tag:'Google',title:e.title,date:e.date,time:e.time,end:e.end,allDay:e.allDay,location:e.location,google:true}))}
 function allItems(){return S.items.concat(gItems())}
