@@ -567,7 +567,13 @@ function navInfo(k){
   return null;
 }
 if(!S.settings.model||S.settings.model==='gemini-2.5-flash')S.settings.model='gemini-3.8-flash';
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof syncMark==='function')syncMark()}
+/* ===== 端末間の同期（個人のGoogleドライブ） =====
+   同期の状態はこの端末だけに置く（データ本体と一緒に同期しない） */
+let SY={on:false,at:0,dirty:false,last:0};try{Object.assign(SY,JSON.parse(localStorage.getItem(KEY+'_sync')||'{}'))}catch(e){}
+function sySave(){try{localStorage.setItem(KEY+'_sync',JSON.stringify(SY))}catch(e){}}
+const DEVICE=/iPad/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&'ontouchend' in document)?'iPad':/Android/.test(navigator.userAgent)?'スマホ':/iPhone/.test(navigator.userAgent)?'iPhone':'PC';
+let syTimer=null,syBusy=false;
 
 const MQ=window.matchMedia('(min-width:860px)');
 const LAY_DEF={lw:220,rw:380,lOpen:true,rOpen:true};
@@ -785,6 +791,12 @@ function vSet(){
     <label class="f"><span>合言葉</span><input id="c_kintai_token" type="password" autocomplete="off" value="${esc(S.conn.kintai.token)}"></label>
     <div><button class="btn sm" data-act="connTest" data-k="kintai">保存して接続テスト</button></div>
     <div class="notice"><span class="grow"><b>GASアプリの埋め込み：</b>既存のGASアプリの doGet で返している画面に <span class="kbd">.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)</span> を付け足して、新しいバージョンでデプロイし直すと、NK →「GASアプリ」に埋め込めるようになる。</span></div></div>
+  <div class="card setrow"><div class="card-h"><h2>端末間の同期（iPad・スマホ）</h2><span class="pill ${SY.on?(ui.syErr?'danger':'ok'):''}">${SY.on?(ui.syErr?'エラー':'オン'):'オフ'}</span></div>
+    <div class="small muted">データを個人のGoogleドライブ（${'WORK_同期データ.json'}）に保存して、同じURLを開いたほかの端末と共有する。上の「Googleカレンダー（個人）」の中継GASを使うので、先にそちらをつないでおいてね。表示モード・レイアウト・同期の設定は端末ごと。</div>
+    ${SY.on?`<div class="small">この端末：<b>${DEVICE}</b>　最終同期：${SY.last?(()=>{const t=new Date(SY.last);return `${t.getMonth()+1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())}`})():'まだ'}${SY.dirty?'　<span class="short">未送信の変更あり</span>':''}</div>${ui.syErr?`<div class="small short">${esc(ui.syErr)}</div>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="syNow">今すぐ同期</button><button class="btn sm sub" data-act="syOff">同期をオフ</button></div>`
+      :`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="syOn" data-k="local">この端末のデータで同期を始める</button><button class="btn sm sub" data-act="syOn" data-k="remote">クラウドのデータを読み込んで始める</button></div>
+      <div class="small muted">最初の端末（iPad）は「この端末のデータで始める」、2台目（スマホ）は「クラウドのデータを読み込んで始める」を押す。</div>`}</div>
   <div class="card setrow"><h2>AI連携（Gemini・無料枠）</h2>
     <div class="small muted">Google AI Studio（aistudio.google.com）で無料のAPIキーを発行して貼り付けると、ホームのAIが本物のAIで答えるようになる。キーはこの端末のブラウザ内だけに保存される。</div>
     <label class="f"><span>APIキー</span><input id="s_key" type="password" autocomplete="off" value="${esc(S.settings.apiKey)}" placeholder="AIza…"></label>
@@ -891,6 +903,35 @@ function membersSheet(){
 }
 
 /* ===== GAS中継 ===== */
+function syncMark(){if(!SY.on)return;SY.dirty=true;sySave();clearTimeout(syTimer);syTimer=setTimeout(()=>syncPush(),2500)}
+async function syncPush(force){
+  if(!SY.on||syBusy)return;syBusy=true;
+  try{const j=await bridge('cal',{action:'syncPut',data:JSON.stringify(S),base:SY.at,device:DEVICE,force:force?1:''},true);
+    SY.at=j.at;SY.dirty=false;SY.last=Date.now();sySave();ui.syErr='';}
+  catch(e){if(/別の端末/.test(e.message)){syBusy=false;await syncPull(true);return}ui.syErr=e.message}
+  syBusy=false;if(ui.view==='set')render();
+}
+async function syncPull(fromConflict){
+  if(!SY.on||syBusy)return;syBusy=true;
+  try{const j=await bridge('cal',{action:'syncGet'});SY.last=Date.now();ui.syErr='';
+    if(!j.at||!j.data){syBusy=false;sySave();if(SY.dirty||!j.at)await syncPush(true);return}
+    if(j.at===SY.at){syBusy=false;sySave();if(SY.dirty)syncPush();return}
+    if(SY.dirty||fromConflict){ui.syConflict={at:j.at,device:j.device,data:j.data};syBusy=false;sySave();render();return}
+    syApply(j);return}
+  catch(e){ui.syErr=e.message}
+  syBusy=false;sySave();if(ui.view==='set')render();
+}
+function syApply(j){
+  try{JSON.parse(j.data)}catch(e){toast('クラウドのデータが壊れていて読めなかった');syBusy=false;return}
+  try{localStorage.setItem(KEY,j.data)}catch(e){}
+  SY.at=j.at;SY.dirty=false;SY.last=Date.now();sySave();location.reload();
+}
+function syncBanner(){
+  const c=ui.syConflict;if(!c)return '';const t=new Date(c.at);
+  return `<div class="notice" style="margin-bottom:14px"><span class="grow"><b>同期の確認：</b>${esc(c.device||'別の端末')}で ${t.getMonth()+1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())} に更新されたデータがあって、この端末にもまだ送っていない変更がある。どっちを残す？</span>
+    <button class="btn sm" data-act="syUseRemote">${esc(c.device||'クラウド')}のデータを使う</button><button class="btn sm sub" data-act="syUseLocal">この端末のデータを使う</button></div>`;
+}
+
 async function bridge(kind,params,post){
   const c=S.conn&&S.conn[kind];
   if(!c||!c.url)throw new Error('接続先が未設定。設定画面の「連携」で入れてね');
@@ -1552,7 +1593,7 @@ function toClaude(){
 /* ===== 描画とイベント ===== */
 const VIEWS={home:vHome,genba:vGenba,nk:vNk,ark:vArk,me:vMe,body:vBody,set:vSet};
 function render(){
-  document.getElementById('main').innerHTML=launcherBar()+VIEWS[ui.view]();
+  document.getElementById('main').innerHTML=launcherBar()+syncBanner()+VIEWS[ui.view]();
   document.getElementById('side').innerHTML=`<div class="brandrow"><div class="brand" style="color:var(--accent)">${esc(appName())}</div><button class="paneclose" data-act="lClose" aria-label="メニューを閉じる">${ic('side')}</button></div>`+
     NAV.map(([k,l])=>`${k==='set'?'<div class="spacer"></div>':''}<button class="navbtn ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}${navInfo(k)?esc(navInfo(k).name):l}${navInfo(k)?`<span class="dot" style="--c:${navInfo(k).c}"></span>`:''}</button>`).join('');
   document.getElementById('tabbar').innerHTML=NAV.filter(n=>n[0]!=='set').map(([k,l])=>`<button class="tab ${ui.view===k?'on':''}" data-act="nav" data-v="${k}">${ic(k)}<span>${navInfo(k)?esc(navInfo(k).name):l}</span></button>`).join('');
@@ -1630,6 +1671,14 @@ const ACT={
   saveNames:()=>{const v=id=>(document.getElementById(id)?.value||'').trim();
     S.names={app:v('n_app')};Object.keys(AREA_DEF).forEach(k=>{S.names[k]={name:v('n_'+k+'_name'),full:v('n_'+k+'_full')}});
     applyNames();commit('名称を保存した')},
+  syOn:async el=>{if(!S.conn.cal||!S.conn.cal.url){toast('先に「Googleカレンダー（個人）」の中継GASをつないでね');return}
+    SY.on=true;SY.at=0;sySave();
+    if(el.dataset.k==='remote'){try{const j=await bridge('cal',{action:'syncGet'});if(!j.at||!j.data){toast('クラウドにまだデータがないよ。先にiPadで同期を始めてね');SY.on=false;sySave();return}syApply(j)}catch(e){SY.on=false;sySave();toast('つながらない：'+e.message)}}
+    else{SY.dirty=true;sySave();await syncPush(true);toast(ui.syErr?'同期できなかった：'+ui.syErr:'同期を始めた');render()}},
+  syOff:()=>{SY.on=false;sySave();render();toast('同期をオフにした（データはこの端末に残る）')},
+  syNow:async()=>{if(SY.dirty)await syncPush();else await syncPull();toast(ui.syErr?'同期できなかった：'+ui.syErr:'同期した');render()},
+  syUseRemote:()=>{const c=ui.syConflict;ui.syConflict=null;syApply(c)},
+  syUseLocal:async()=>{ui.syConflict=null;await syncPush(true);render();toast('この端末のデータでクラウドを上書きした')},
   resetLayout:()=>{LAY={...LAY_DEF};saveLay();render();toast('レイアウトを元に戻した')},
   addLaunch:()=>launchSheet(),
   editLaunch:el=>launchSheet(byId(S.launcher,el.dataset.id)),
@@ -1779,6 +1828,7 @@ document.addEventListener('submit',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetCb)closeSheet()});
 initSplit();
+if(SY.on){setTimeout(()=>syncPull(),400);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncPull();else if(SY.dirty){clearTimeout(syTimer);syncPush()}})}
 if(S.conn.kintai.url&&ui.view==='home')setTimeout(loadToday,200);
 if(S.conn.cal.url&&Date.now()-S.gcal.at>10*60*1000)setTimeout(()=>syncCal(false),300);
 if(MQ.addEventListener)MQ.addEventListener('change',()=>{ui.aiMobile=false;render()});
