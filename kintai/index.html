@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8">
+<title>勤怠報告</title>
+<style>
+  html, body { margin:0; height:100%; background:#f5f6f8; }
+  iframe { position:fixed; inset:0; width:100%; height:100%; border:0; display:block; }
+  #err { display:none; font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif; padding:24px; text-align:center; color:#991b1b; }
+</style>
+</head>
+<body>
+<iframe id="app" title="勤怠報告" allow="geolocation; clipboard-write"></iframe>
+<div id="err">URLに ?id= がありません。配られたURLから開いてください。</div>
+<script>
+  // 勤怠アプリ（GAS）の公開URL
+  var EXEC = 'https://script.google.com/macros/s/AKfycbxUNUaxkYDgut35rMrH6Vyv46kWxic1cDe5wvdyeQagE-kml1R7d8K-SOvuaSHhaacyFw/exec';
+  // このページのURL（GAS側で、アプリ内の移動先としてこのページを使う）
+  var SHELL = location.origin + '/work/kintai/';
+
+  var q = new URLSearchParams(location.search);
+  var p = new URLSearchParams();
+  ['id', 'page'].forEach(function (k) { if (q.get(k)) p.set(k, q.get(k)); });
+  if (!p.get('id')) {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('err').style.display = 'block';
+  } else {
+    p.set('shell', SHELL);
+    document.getElementById('app').src = EXEC + '?' + p.toString();
+  }
+</script>
+</body>
+</html>
